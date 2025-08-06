@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard สรุปรายงาน อสม.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style> 
+        html {
+            scroll-behavior: smooth;
+        }
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background-color: #f0f7ff; 
+        }
+        .month-tag { 
+            scroll-margin-top: 300px !important; /* เพิ่ม !important และเพิ่มค่า */ 
+        }
+        .month-nav-item.active {
+            background-color: #1d4ed8;
+            color: white;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="main-view">
+        <nav class="bg-blue-800 text-white p-4 shadow-lg flex justify-between items-center sticky top-0 z-20">
+            <div class="flex items-center gap-3">
+                <img src="osm.png" alt="Logo" class="h-16 w-16 object-contain">
+                <h1 id="facility-name-header" class="text-xl font-bold">Dashboard ภาพรวม</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <div id="user-name" class="font-semibold"></div>
+                    <div id="user-position" class="text-sm text-blue-200"></div>
+                </div>
+                <button onclick="handleLogout()" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                    ออกจากระบบ
+                </button>
+            </div>
+        </nav>
+        
+        <div class="sticky top-[72px] bg-white/90 backdrop-blur-sm shadow-sm z-10">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                 <h2 class="text-lg font-bold text-gray-800">ภาพรวมปีงบประมาณ</h2>
+                 <div class="flex items-center gap-2">
+                    <label for="fiscal-year-select" class="font-semibold text-sm">เลือกปีงบประมาณ:</label>
+                    <select id="fiscal-year-select" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"></select>
+                </div>
+            </div>
+             <!-- Sticky Month Navigation -->
+            <div id="month-nav" class="overflow-x-auto border-t">
+                <div class="container mx-auto px-4">
+                    <div class="flex space-x-2 py-2">
+                        <!-- Month tags will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+            <div id="dashboard-content" class="space-y-8">
+                <!-- Dashboard cards will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0L9QaR9j7o0urBQI2lpp0YnnctskdFbaPELXiPEfGLNodih3kRfDAeASydIFg_yIW/exec';
+        const dashboardContent = document.getElementById('dashboard-content');
+        const monthNav = document.getElementById('month-nav').querySelector('.flex');
+        const fiscalYearSelect = document.getElementById('fiscal-year-select');
+        let appState = { user: null };
+
+        const fiscalMonths = [
+            { month: 10, name: 'ตุลาคม' }, { month: 11, name: 'พฤศจิกายน' }, { month: 12, name: 'ธันวาคม' },
+            { month: 1, name: 'มกราคม' }, { month: 2, name: 'กุมภาพันธ์' }, { month: 3, name: 'มีนาคม' },
+            { month: 4, name: 'เมษายน' }, { month: 5, name: 'พฤษภาคม' }, { month: 6, name: 'มิถุนายน' },
+            { month: 7, name: 'กรกฎาคม' }, { month: 8, name: 'สิงหาคม' }, { month: 9, name: 'กันยายน' }
+        ];
+
+        function calculateStickyNavHeight() {
+            const topNav = document.querySelector('nav.bg-blue-800');
+            const stickySection = document.querySelector('div.sticky');
+            
+            let totalHeight = 0;
+            
+            if (topNav) {
+                totalHeight += topNav.offsetHeight;
+            }
+            
+            if (stickySection) {
+                totalHeight += stickySection.offsetHeight;
+            }
+            
+            totalHeight += 30; // เพิ่ม padding
+            
+            document.documentElement.style.setProperty('--sticky-nav-height', `${totalHeight}px`);
+            
+            return totalHeight;
+        }
+
+        function populateFiscalYearSelect() {
+            const currentMonth = new Date().getMonth() + 1;
+            let currentFiscalYear = new Date().getFullYear() + 543;
+            if (currentMonth >= 10) currentFiscalYear += 1;
+
+            for (let i = 0; i < 5; i++) {
+                const year = currentFiscalYear - i;
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                fiscalYearSelect.appendChild(option);
+            }
+            fiscalYearSelect.addEventListener('change', fetchDashboardData);
+        }
+
+        async function initializePage() {
+            const storedUser = sessionStorage.getItem('vhvUser');
+            if (storedUser) {
+                appState.user = JSON.parse(storedUser);
+                if (appState.user.facilityId !== '00126') {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                document.getElementById('user-name').textContent = appState.user.fullName;
+                document.getElementById('user-position').textContent = appState.user.position;
+                populateFiscalYearSelect();
+                createMonthNav();
+                
+                setTimeout(() => {
+                    calculateStickyNavHeight();
+                }, 500);
+                
+                await fetchDashboardData();
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        function handleLogout() {
+            sessionStorage.removeItem('vhvUser');
+            window.location.href = 'index.html';
+        }
+
+        function createMonthNav() {
+            monthNav.innerHTML = '';
+            fiscalMonths.forEach(m => {
+                const a = document.createElement('a');
+                a.href = `#month-${m.month}`;
+                a.id = `month-nav-${m.month}`;
+                a.className = 'month-nav-item px-4 py-2 rounded-md text-sm font-semibold text-gray-600 hover:bg-blue-100 hover:text-blue-700 whitespace-nowrap transition-colors';
+                a.textContent = m.name;
+
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    scrollToMonthCard(m.month, 'smooth');
+                });
+
+                monthNav.appendChild(a);
+            });
+        }
+
+        function scrollToMonthCard(month, behavior = 'auto') {
+            const targetElement = document.getElementById(`month-${month}`);
+            if (targetElement) {
+                let stickyNavHeight = 0;
+                const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height');
+                if (cssVar) {
+                    stickyNavHeight = parseInt(cssVar, 10) || 0;
+                } else {
+                    const topNav = document.querySelector('nav.bg-blue-800');
+                    const stickySection = document.querySelector('div.sticky');
+                    if (topNav) stickyNavHeight += topNav.offsetHeight;
+                    if (stickySection) stickyNavHeight += stickySection.offsetHeight;
+                    stickyNavHeight += 30;
+                }
+                const offsetTop = targetElement.getBoundingClientRect().top + window.scrollY - stickyNavHeight;
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior
+                });
+            }
+        }
+
+        async function fetchDashboardData() {
+            dashboardContent.innerHTML = `<div class="col-span-full flex justify-center items-center gap-4 p-8 text-gray-500"><img src="osm.gif" alt="Loading..." class="w-16 h-16"><span class="text-lg">กำลังโหลดข้อมูล Dashboard...</span></div>`;
+            const fiscalYear = fiscalYearSelect.value;
+            try {
+                const url = new URL(APPS_SCRIPT_URL);
+                url.searchParams.append('action', 'getDashboardData');
+                url.searchParams.append('fiscalYear', fiscalYear);
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('ไม่สามารถดึงข้อมูล Dashboard ได้');
+                const dashboardData = await response.json();
+                renderDashboard(dashboardData);
+            } catch (error) {
+                dashboardContent.innerHTML = `<p class="col-span-full text-center p-8 text-red-500">${error.message}</p>`;
+            }
+        }
+
+        function renderDashboard(data) {
+            dashboardContent.innerHTML = '';
+            const fiscalYear = parseInt(fiscalYearSelect.value);
+
+            // Render monthly cards
+            fiscalMonths.forEach(monthInfo => {
+                const year = monthInfo.month >= 10 ? fiscalYear - 1 : fiscalYear;
+                const monthData = data.summary[monthInfo.month] || {};
+                
+                let facilityRows = '';
+                let totalPaidInMonth = 0;
+                let totalSuspendedInMonth = 0;
+
+                data.units.forEach(unit => {
+                    const unitData = monthData[unit.id] || { paid: 0, suspended: 0, fileUrl: null };
+                    
+                    totalPaidInMonth += unitData.paid || 0;
+                    totalSuspendedInMonth += unitData.suspended || 0;
+
+                    const viewFileIcon = unitData.fileUrl 
+                        ? `<a href="${unitData.fileUrl}" target="_blank" title="ดูไฟล์ PDF"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 hover:text-blue-700" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg></a>`
+                        : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>`;
+
+                    facilityRows += `
+                        <tr class="border-b last:border-b-0 hover:bg-gray-50">
+                            <td class="py-2 px-4 text-left">${unit.name}</td>
+                            <td class="py-2 px-4 text-center text-green-600 font-semibold">${unitData.paid.toLocaleString()}</td>
+                            <td class="py-2 px-4 text-center text-red-600 font-semibold">${unitData.suspended.toLocaleString()}</td>
+                            <td class="py-2 px-4 flex justify-center">${viewFileIcon}</td>
+                        </tr>
+                    `;
+                });
+
+                const monthCard = document.createElement('div');
+                monthCard.id = `month-${monthInfo.month}`;
+                monthCard.className = 'month-tag bg-white rounded-xl shadow-lg overflow-hidden';
+                monthCard.innerHTML = `
+                    <h3 class="text-xl font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 p-4">${monthInfo.name} ${year}</h3>
+                    <div class="max-h-[400px] overflow-y-auto">
+                        <table class="w-full text-sm">
+                            <colgroup>
+                                <col style="width: 50%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 10%;">
+                            </colgroup>
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="py-2 px-4 text-left font-semibold text-gray-600">หน่วยบริการ</th>
+                                    <th class="py-2 px-4 text-center font-semibold text-gray-600">เบิกจ่าย</th>
+                                    <th class="py-2 px-4 text-center font-semibold text-gray-600">ระงับ</th>
+                                    <th class="py-2 px-4 text-center font-semibold text-gray-600">ไฟล์</th>
+                                </tr>
+                            </thead>
+                            <tbody>${facilityRows}</tbody>
+                            <tfoot>
+                                <tr class="bg-gray-100 font-bold">
+                                    <td class="py-2 px-4 text-right">รวม</td>
+                                    <td class="py-2 px-4 text-center text-green-700">${totalPaidInMonth.toLocaleString()}</td>
+                                    <td class="py-2 px-4 text-center text-red-700">${totalSuspendedInMonth.toLocaleString()}</td>
+                                    <td class="py-2 px-4"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                `;
+                dashboardContent.appendChild(monthCard);
+            });
+            
+            setupScrollSpy();
+            
+            setTimeout(() => {
+                calculateStickyNavHeight();
+            }, 200);
+            
+            const currentMonthJS = new Date().getMonth() + 1;
+            const currentYearBE = new Date().getFullYear() + 543;
+            const selectedFiscalYear = parseInt(fiscalYearSelect.value, 10);
+            
+            const actualCurrentFiscalYear = currentMonthJS >= 10 ? currentYearBE + 1 : currentYearBE;
+
+            if (selectedFiscalYear === actualCurrentFiscalYear) {
+                const currentMonthCard = document.getElementById(`month-${currentMonthJS}`);
+                if (currentMonthCard) {
+                    setTimeout(() => {
+                        let stickyNavHeight = 0;
+                        const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height');
+                        if (cssVar) {
+                            stickyNavHeight = parseInt(cssVar, 10) || 0;
+                        } else {
+                            const topNav = document.querySelector('nav.bg-blue-800');
+                            const stickySection = document.querySelector('div.sticky');
+                            if (topNav) stickyNavHeight += topNav.offsetHeight;
+                            if (stickySection) stickyNavHeight += stickySection.offsetHeight;
+                            stickyNavHeight += 30;
+                        }
+                        const offsetTop = currentMonthCard.getBoundingClientRect().top + window.scrollY - stickyNavHeight;
+                        window.scrollTo({
+                            top: offsetTop,
+                            behavior: 'auto'
+                        });
+                    }, 100);
+                }
+            }
+        }
+
+        let scrollSpyObserver = null;
+        function setupScrollSpy() {
+            if (scrollSpyObserver) {
+                scrollSpyObserver.disconnect();
+            }
+
+            const sections = document.querySelectorAll('.month-tag');
+            
+            const onScroll = () => {
+                const stickyNavHeight = 300; 
+                let currentSectionId = null;
+                
+                sections.forEach(section => {
+                    const rect = section.getBoundingClientRect();
+                    if (rect.top <= stickyNavHeight && rect.bottom >= stickyNavHeight) {
+                        currentSectionId = section.getAttribute('id');
+                    }
+                });
+
+                document.querySelectorAll('.month-nav-item').forEach(item => item.classList.remove('active'));
+                
+                if (currentSectionId) {
+                    const navLink = document.querySelector(`.month-nav-item[href="#${currentSectionId}"]`);
+                    if (navLink) {
+                        navLink.classList.add('active');
+                        navLink.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                    }
+                }
+            };
+            
+            window.addEventListener('scroll', onScroll, { passive: true });
+        }
+
+        window.addEventListener('resize', () => {
+            calculateStickyNavHeight();
+        });
+
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

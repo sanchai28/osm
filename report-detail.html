@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกการส่งรายงาน อสม.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style> 
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f7ff; } 
+        .report-btn {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-weight: 500;
+            min-width: 95px;
+            text-align: center;
+            display: inline-block;
+        }
+        .report-btn.selected {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            color: white;
+        }
+        /* Submission Styles */
+        .btn-paper { background-color: #e0f2fe; color: #0c4a6e; border-color: #bae6fd; }
+        .btn-paper.selected { background-color: #0ea5e9; border-color: #0284c7; }
+        .btn-smart { background-color: #f3e8ff; color: #6b21a8; border-color: #e9d5ff; }
+        .btn-smart.selected { background-color: #9333ea; border-color: #7e22ce; }
+        .btn-none { background-color: #f3f4f6; color: #4b5563; border-color: #e5e7eb; }
+        .btn-none.selected { background-color: #6b7280; border-color: #4b5563; }
+        /* Payment Styles */
+        .btn-paid { background-color: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        .btn-paid.selected { background-color: #22c55e; border-color: #16a34a; }
+        .btn-suspend { background-color: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        .btn-suspend.selected { background-color: #ef4444; border-color: #dc2626; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="main-view">
+        <nav class="bg-blue-600 text-white p-4 shadow-lg flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="osm.png" alt="Logo" class="h-16 w-16 object-contain">
+                <h1 id="facility-name-header" class="text-xl font-bold"></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="report.html" class="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                    กลับหน้าสรุป
+                </a>
+            </div>
+        </nav>
+
+        <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                <h2 id="report-month-header" class="text-2xl font-bold mb-2 text-gray-800"></h2>
+                <p class="text-gray-500">กรุณาเลือกรูปแบบการส่งและการเบิกจ่ายสำหรับ อสม. แต่ละราย</p>
+            </div>
+            
+            <div class="bg-white shadow-xl rounded-xl overflow-hidden pb-24">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 w-16 text-center whitespace-nowrap">ลำดับที่</th>
+                                <th class="px-6 py-3">ชื่อ-นามสกุล</th>
+                                <th class="px-6 py-3">เลขบัตรประชาชน</th>
+                                <th class="px-6 py-3 text-center">หมู่ที่</th>
+                                <th class="px-6 py-3">รูปแบบการส่งรายงาน</th>
+                                <th class="px-6 py-3">การเบิกจ่ายค่าตอบแทน</th>
+                            </tr>
+                            <tr class="bg-gray-100">
+                                <th class="px-6 py-2" colspan="4">
+                                    <span class="font-semibold normal-case text-gray-600">เลือกทั้งหมด:</span>
+                                </th>
+                                <th class="px-6 py-2">
+                                    <div class="flex flex-wrap gap-1">
+                                        <button onclick="selectAll('submission', 'ใบกระดาษ')" class="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 px-2 py-1 rounded-full normal-case font-medium w-24 text-center">ใบกระดาษ</button>
+                                        <button onclick="selectAll('submission', 'Smart อสม.')" class="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 px-2 py-1 rounded-full normal-case font-medium w-24 text-center">Smart อสม.</button>
+                                        <button onclick="selectAll('submission', 'ไม่ได้ส่ง')" class="text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 px-2 py-1 rounded-full normal-case font-medium w-24 text-center">ไม่ได้ส่ง</button>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-2">
+                                     <div class="flex flex-wrap gap-1">
+                                        <button onclick="selectAll('payment', 'เบิกจ่าย')" class="text-xs bg-green-100 text-green-700 hover:bg-green-200 px-2 py-1 rounded-full normal-case font-medium w-24 text-center">เบิกจ่าย</button>
+                                        <button onclick="selectAll('payment', 'ระงับจ่าย')" class="text-xs bg-red-100 text-red-700 hover:bg-red-200 px-2 py-1 rounded-full normal-case font-medium w-24 text-center">ระงับจ่าย</button>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-8 right-8 z-50">
+            <button onclick="saveReport()" class="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>บันทึกข้อมูล</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0L9QaR9j7o0urBQI2lpp0YnnctskdFbaPELXiPEfGLNodih3kRfDAeASydIFg_yIW/exec';
+        const reportTableBody = document.getElementById('report-table-body');
+        let appState = { user: null, vhvList: [], reportMonth: null, reportYear: null };
+
+        async function initializePage() {
+            const storedUser = sessionStorage.getItem('vhvUser');
+            const urlParams = new URLSearchParams(window.location.search);
+            appState.reportMonth = urlParams.get('month');
+            appState.reportYear = urlParams.get('year');
+
+            if (storedUser && appState.reportMonth && appState.reportYear) {
+                appState.user = JSON.parse(storedUser);
+                const monthName = new Date(2000, appState.reportMonth - 1, 1).toLocaleString('th-TH', { month: 'long' });
+                document.getElementById('facility-name-header').textContent = `${appState.user.facilityName}`;
+                document.getElementById('report-month-header').textContent = `บันทึกรายงาน ประจำเดือน ${monthName} ${appState.reportYear}`;
+                await loadDataForPage();
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        async function loadDataForPage() {
+            reportTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8"><div class="flex justify-center items-center gap-4 text-gray-500"><img src=\"osm.gif\" alt=\"Loading...\" class=\"w-16 h-16\"><span class=\"text-lg\">กำลังโหลดข้อมูล...</span></div></td></tr>`;
+            try {
+                const vhvListPromise = fetch(`${APPS_SCRIPT_URL}?action=getVhvList&facilityId=${appState.user.facilityId}`).then(res => res.json());
+                const monthlyReportPromise = fetch(`${APPS_SCRIPT_URL}?action=getMonthlyReport&facilityId=${appState.user.facilityId}&month=${appState.reportMonth}&year=${appState.reportYear}`).then(res => res.json());
+                
+                const [vhvList, monthlyReport] = await Promise.all([vhvListPromise, monthlyReportPromise]);
+                
+                appState.vhvList = vhvList;
+                renderReportTable(monthlyReport);
+            } catch (error) {
+                reportTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">${error.message}</td></tr>`;
+            }
+        }
+
+        function handleSelection(clickedButton, group, idCard) {
+            const buttons = document.querySelectorAll(`button[data-group="${group}"][data-idcard="${idCard}"]`);
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            clickedButton.classList.add('selected');
+        }
+
+        function renderReportTable(existingReport = []) {
+            reportTableBody.innerHTML = '';
+            if (appState.vhvList.length === 0) {
+                reportTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8">ไม่พบข้อมูล อสม. ที่มีสิทธิ์ส่งรายงานในสังกัด</td></tr>`;
+                return;
+            }
+
+            appState.vhvList.sort((a, b) => (parseInt(a.data.moo, 10) || 0) - (parseInt(b.data.moo, 10) || 0));
+
+            appState.vhvList.forEach((vhv, index) => {
+                const idCard = vhv.data.idCard;
+                const existingEntry = existingReport.find(r => r['หมายเลขบัตร อสม'] == idCard);
+
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50';
+                row.dataset.idcard = idCard;
+                
+                const submissionMethod = existingEntry ? existingEntry['รูปแบบการส่งรายงาน'] : '';
+                const paymentStatus = existingEntry ? existingEntry['การเบิกจ่ายค่าตอบแทน'] : '';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-center text-gray-500">${index + 1}</td>
+                    <td class="px-6 py-4 font-medium text-gray-900">${vhv.data.fullName}</td>
+                    <td class="px-6 py-4 text-gray-600">${idCard}</td>
+                    <td class="px-6 py-4 text-center">${vhv.data.moo || '-'}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-wrap gap-2 justify-start">
+                            <button onclick="handleSelection(this, 'submission', '${idCard}')" data-group="submission" data-idcard="${idCard}" data-value="ใบกระดาษ" class="report-btn btn-paper ${submissionMethod === 'ใบกระดาษ' ? 'selected' : ''}">ใบกระดาษ</button>
+                            <button onclick="handleSelection(this, 'submission', '${idCard}')" data-group="submission" data-idcard="${idCard}" data-value="Smart อสม." class="report-btn btn-smart ${submissionMethod === 'Smart อสม.' ? 'selected' : ''}">Smart อสม.</button>
+                            <button onclick="handleSelection(this, 'submission', '${idCard}')" data-group="submission" data-idcard="${idCard}" data-value="ไม่ได้ส่ง" class="report-btn btn-none ${submissionMethod === 'ไม่ได้ส่ง' ? 'selected' : ''}">ไม่ได้ส่ง</button>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-wrap gap-2 justify-start">
+                            <button onclick="handleSelection(this, 'payment', '${idCard}')" data-group="payment" data-idcard="${idCard}" data-value="เบิกจ่าย" class="report-btn btn-paid ${paymentStatus === 'เบิกจ่าย' ? 'selected' : ''}">เบิกจ่าย</button>
+                            <button onclick="handleSelection(this, 'payment', '${idCard}')" data-group="payment" data-idcard="${idCard}" data-value="ระงับจ่าย" class="report-btn btn-suspend ${paymentStatus === 'ระงับจ่าย' ? 'selected' : ''}">ระงับจ่าย</button>
+                        </div>
+                    </td>
+                `;
+                reportTableBody.appendChild(row);
+            });
+        }
+
+        function selectAll(type, value) {
+            appState.vhvList.forEach(vhv => {
+                const idCard = vhv.data.idCard;
+                const buttonToSelect = document.querySelector(`button[data-group="${type}"][data-idcard="${idCard}"][data-value="${value}"]`);
+                if (buttonToSelect) {
+                    handleSelection(buttonToSelect, type, idCard);
+                }
+            });
+        }
+
+        async function saveReport() {
+            const reportData = [];
+            let allSelected = true;
+
+            appState.vhvList.forEach(vhv => {
+                const idCard = vhv.data.idCard;
+                const submissionButton = document.querySelector(`button[data-group="submission"][data-idcard="${idCard}"].selected`);
+                const paymentButton = document.querySelector(`button[data-group="payment"][data-idcard="${idCard}"].selected`);
+
+                if (!submissionButton || !paymentButton) allSelected = false;
+
+                reportData.push({
+                    vhvIdCard: idCard,
+                    submissionMethod: submissionButton ? submissionButton.dataset.value : '',
+                    paymentStatus: paymentButton ? paymentButton.dataset.value : ''
+                });
+            });
+            
+            if (!allSelected) {
+                Swal.fire('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกข้อมูลให้ครบทุกราย', 'warning');
+                return;
+            }
+
+            const result = await Swal.fire({
+                title: 'ยืนยันการบันทึกข้อมูล?',
+                text: `คุณกำลังจะบันทึกข้อมูลการส่งรายงานของ อสม. จำนวน ${reportData.length} ราย`,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#16a34a', cancelButtonColor: '#6b7280',
+                confirmButtonText: 'ใช่, บันทึกเลย', cancelButtonText: 'ยกเลิก'
+            });
+
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'กำลังบันทึก...', text: 'กรุณารอสักครู่',
+                    allowOutsideClick: false, didOpen: () => Swal.showLoading()
+                });
+
+                const payload = {
+                    action: 'saveMonthlyReport',
+                    reports: reportData,
+                    officerIdCard: appState.user.idCard,
+                    facilityId: appState.user.facilityId,
+                    month: appState.reportMonth,
+                    year: appState.reportYear
+                };
+                
+                try {
+                    const response = await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST', body: JSON.stringify(payload),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    const result = await response.json();
+                    if (result.status !== 'success') {
+                         throw new Error(result.message || 'เกิดข้อผิดพลาดในการบันทึก');
+                    }
+
+                    const printResult = await Swal.fire({
+                        title: 'สำเร็จ!',
+                        text: 'บันทึกข้อมูลรายงานเรียบร้อยแล้ว',
+                        icon: 'success',
+                        showCancelButton: true,
+                        confirmButtonText: 'พิมพ์รายงาน',
+                        cancelButtonText: 'กลับหน้าสรุป',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6e7881',
+                    });
+
+                    if (printResult.isConfirmed) {
+                        const printData = {
+                            user: appState.user,
+                            month: appState.reportMonth,
+                            year: appState.reportYear,
+                            vhvList: appState.vhvList,
+                            reportData: reportData
+                        };
+                        sessionStorage.setItem('printData', JSON.stringify(printData));
+                        window.open('print.html', '_blank');
+                        window.location.href = 'report.html'; // [MODIFIED] Redirect after opening print tab
+                    } else {
+                        window.location.href = 'report.html';
+                    }
+
+                } catch (error) {
+                    Swal.fire('เกิดข้อผิดพลาด', error.message, 'error');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

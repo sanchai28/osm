@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการข้อมูล อสม.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f7ff; }
+        .swal2-popup { border-radius: 1rem !important; }
+        .swal-form-label { display: block; text-align: left; margin-top: 1rem; margin-bottom: 0.25rem; font-size: 0.875rem; font-weight: 500; color: #4b5563; }
+        
+        .swal-form-input {
+            width: 100%; padding: 0.75rem; border-radius: 0.5rem; 
+            background-color: #f3f4f6; border: 1px solid #d1d5db; color: #111827;
+        }
+        .swal-form-input:focus { 
+            outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); 
+        }
+        input.swal-form-input { cursor: text; }
+        select.swal-form-input { cursor: pointer; }
+
+        input.swal-form-input:read-only { 
+            background-color: #e5e7eb; cursor: not-allowed; 
+        }
+
+        /* Go to Top Button */
+        #goTopBtn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 50;
+            display: none;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 9999px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            padding: 0.75rem 1.1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        #goTopBtn:hover {
+            background: #1d4ed8;
+            transform: scale(1.08);
+        }
+        #goTopBtn svg {
+            display: block;
+            margin: 0 auto;
+        }
+        @media (max-width: 640px) {
+            #goTopBtn { right: 1rem; bottom: 1rem; padding: 0.6rem 0.9rem; font-size: 1.2rem; }
+        }
+
+        /* Animation for table row fade-in */
+        .fade-in-row {
+            animation: fadeInRow 0.7s ease;
+        }
+        @keyframes fadeInRow {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Login View -->
+    <div id="login-view" class="flex items-center justify-center min-h-screen bg-gray-100">
+        <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-xl">
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="flex justify-center mb-4">
+                        <img src="osm.gif" alt="Logo" class="h-40 w-40 object-contain">
+                    </div>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900">ระบบข้อมูล อสม.</h1>
+                <p class="mt-2 text-gray-500">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="idCardLogin" class="text-sm font-bold text-gray-600 block">เลขบัตรประชาชน</label>
+                    <input type="text" id="idCardLogin" class="w-full p-3 mt-1 text-gray-800 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="xxxxxxxxxxxxx" required>
+                </div>
+                <div>
+                    <label for="passwordLogin" class="text-sm font-bold text-gray-600 block">รหัสผ่าน (เลขสถานบริการ)</label>
+                    <input type="password" id="passwordLogin" class="w-full p-3 mt-1 text-gray-800 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                    <svg id="login-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
+                    <img id="login-gif" src="osm.gif" alt="Loading..." class="h-5 w-5 hidden">
+                    <span id="login-button-text">เข้าสู่ระบบ</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App View (hidden by default) -->
+    <div id="main-view" class="hidden">
+        <nav class="bg-blue-600 text-white p-4 shadow-lg flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                 <img src="osm.png" alt="Logo" class="h-16 w-16 object-contain">
+                <h1 id="facility-name-header" class="text-xl font-bold"></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <div id="user-name" class="font-semibold"></div>
+                    <div id="user-position" class="text-sm text-blue-200"></div>
+                </div>
+                <button onclick="handleLogout()" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" /></svg>
+                    ออกจากระบบ
+                </button>
+            </div>
+        </nav>
+
+        <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="bg-white p-6 rounded-xl shadow-md mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-700">จัดการข้อมูล อสม.</h2>
+                    <p class="text-gray-500">เพิ่ม แก้ไข หรือลบข้อมูล อสม. ในสังกัดของคุณ</p>
+                </div>
+                <div class="flex items-center justify-end gap-4">
+                    <a href="report.html" class="flex items-center justify-center gap-2 w-full md:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
+                        ส่งรายงาน อสม.1
+                    </a>
+                    <button onclick="showAddModal()" class="flex items-center justify-center gap-2 w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        เพิ่มข้อมูลใหม่
+                    </button>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">ค้นหาและกรองข้อมูล</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div class="md:col-span-2">
+                        <label for="search-input" class="block text-sm font-medium text-gray-600 mb-1">ค้นหาจากชื่อ หรือ บัตรประชาชน</label>
+                        <input type="text" id="search-input" placeholder="ระบุคำค้นหา..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="filter-status" class="block text-sm font-medium text-gray-600 mb-1">สถานะ</label>
+                        <select id="filter-status" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">ทั้งหมด</option>
+                            <option value="เป็น อสม." selected>เป็น อสม.</option>
+                            <option value="ลาออก">ลาออก</option>
+                            <option value="เสียชีวิต">เสียชีวิต</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="search-button" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                            ค้นหา
+                        </button>
+                        <button id="clear-search-button" class="w-full flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">ล้าง</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-xl rounded-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 w-16 text-center">ลำดับ</th>
+                                <th scope="col" class="px-6 py-3">ชื่อ-นามสกุล</th>
+                                <th scope="col" class="px-6 py-3">หมู่ที่</th>
+                                <th scope="col" class="px-6 py-3">ตำบล</th>
+                                <th scope="col" class="px-6 py-3">เบอร์โทรศัพท์</th>
+                                <th scope="col" class="px-6 py-3">สถานะ</th>
+                                <th scope="col" class="px-6 py-3 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vhv-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0L9QaR9j7o0urBQI2lpp0YnnctskdFbaPELXiPEfGLNodih3kRfDAeASydIFg_yIW/exec';
+        const tableBody = document.getElementById('vhv-table-body');
+        
+        let appState = {
+            user: null,
+            vhvData: []
+        };
+
+        // --- Date Helper Functions ---
+        const thaiMonths = [
+            { value: '01', name: 'มกราคม' }, { value: '02', name: 'กุมภาพันธ์' }, { value: '03', name: 'มีนาคม' },
+            { value: '04', name: 'เมษายน' }, { value: '05', name: 'พฤษภาคม' }, { value: '06', name: 'มิถุนายน' },
+            { value: '07', name: 'กรกฎาคม' }, { value: '08', name: 'สิงหาคม' }, { value: '09', name: 'กันยายน' },
+            { value: '10', name: 'ตุลาคม' }, { value: '11', name: 'พฤศจิกายน' }, { value: '12', name: 'ธันวาคม' }
+        ];
+        const getDayOptions = () => Array.from({length: 31}, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join('');
+        const getMonthOptions = () => thaiMonths.map(m => `<option value="${m.value}">${m.name}</option>`).join('');
+        const getYearOptions = (startOffset = 100, endOffset = 0) => {
+            const currentBuddhistYear = new Date().getFullYear() + 543;
+            let options = '';
+            for (let i = currentBuddhistYear - endOffset; i >= currentBuddhistYear - startOffset; i--) {
+                options += `<option value="${i}">${i}</option>`;
+            }
+            return options;
+        };
+
+        // --- Auth Functions ---
+        async function handleLogin(event) {
+            event.preventDefault();
+            const idCard = document.getElementById('idCardLogin').value;
+            const password = document.getElementById('passwordLogin').value;
+            
+            if (!idCard || !password) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            document.getElementById('login-icon').classList.add('hidden');
+            document.getElementById('login-gif').classList.remove('hidden');
+            document.getElementById('login-button-text').textContent = 'กำลังตรวจสอบ...';
+            
+            const response = await handleFormSubmit({ action: 'login', idCard, password });
+
+            document.getElementById('login-icon').classList.remove('hidden');
+            document.getElementById('login-gif').classList.add('hidden');
+            document.getElementById('login-button-text').textContent = 'เข้าสู่ระบบ';
+
+            if (response && response.status === 'success') {
+                appState.user = response.user;
+                sessionStorage.setItem('vhvUser', JSON.stringify(response.user));
+                
+                if (response.user.facilityId === '00126') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showMainView();
+                }
+            } else {
+                Swal.fire('เข้าสู่ระบบไม่สำเร็จ', response.message || 'เลขบัตรประชาชนหรือรหัสผ่านไม่ถูกต้อง', 'error');
+            }
+        }
+
+        function handleLogout() {
+            appState.user = null;
+            sessionStorage.removeItem('vhvUser');
+            showLoginView();
+        }
+
+        function showLoginView() {
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('main-view').classList.add('hidden');
+            document.getElementById('login-form').reset();
+        }
+
+        function showMainView() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('main-view').classList.remove('hidden');
+            
+            document.getElementById('facility-name-header').textContent = appState.user.facilityName;
+            document.getElementById('user-name').textContent = appState.user.fullName;
+            document.getElementById('user-position').textContent = appState.user.position;
+
+            fetchData();
+        }
+        
+        // --- Main Data Fetch and Render ---
+        async function fetchData() {
+            if (!appState.user) return;
+            showLoadingSpinner();
+            try {
+                const url = new URL(APPS_SCRIPT_URL);
+                url.searchParams.append('action', 'getVhvData');
+                url.searchParams.append('facilityId', appState.user.facilityId);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                appState.vhvData = await response.json();
+                filterAndRenderTable();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}</td></tr>`;
+            }
+        }
+
+        function filterAndRenderTable() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+
+            const filteredData = appState.vhvData.filter(vhv => {
+                const fullName = (vhv.data.fullName || '').toLowerCase();
+                const idCard = (vhv.data.idCard || '').toString();
+                const status = vhv.data.status || '';
+
+                const matchesSearch = searchTerm === '' || fullName.includes(searchTerm) || idCard.includes(searchTerm);
+                const matchesStatus = statusFilter === '' || status === statusFilter;
+
+                return matchesSearch && matchesStatus;
+            });
+            renderTable(filteredData);
+        }
+
+        function renderTable(data) {
+            data.sort((a, b) => (parseInt(a.data.moo, 10) || 0) - (parseInt(b.data.moo, 10) || 0));
+            tableBody.innerHTML = '';
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</td></tr>`;
+                return;
+            }
+            data.forEach((vhv, index) => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50 transition-colors duration-200 fade-in-row';
+
+                const status = vhv.data.status || 'เป็น อสม.';
+                const statusDate = vhv.data.statusDate || '';
+                const statusText = (status !== 'เป็น อสม.' && statusDate) ? `${status} (${statusDate})` : status;
+                const statusColor = status === 'เป็น อสม.' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-center text-gray-500">${index + 1}</td>
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${vhv.data.fullName || '-'}</td>
+                    <td class="px-6 py-4">${vhv.data.moo || '-'}</td>
+                    <td class="px-6 py-4">${vhv.data.subDistrict || '-'}</td>
+                    <td class="px-6 py-4">${vhv.data.phone || '-'}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 font-semibold leading-tight rounded-full ${statusColor}">${statusText}</span></td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick='showEditModal(${vhv.rowIndex})' class="p-2 rounded-full text-yellow-500 hover:bg-yellow-100 hover:text-yellow-700 transition-colors" title="แก้ไข"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                            <button onclick='confirmDelete(${vhv.rowIndex})' class="p-2 rounded-full text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function showLoadingSpinner() {
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8"><div class="flex justify-center items-center gap-4 text-gray-500"><img src="osm.gif" alt="Loading..." class="w-16 h-16"><span class="text-lg">กำลังโหลดข้อมูล...</span></div></td></tr>`;
+        }
+        
+        function toggleStatusDate(status) {
+            const wrapper = document.getElementById('status-date-wrapper');
+            if (wrapper) {
+                wrapper.style.display = (status === 'ลาออก' || status === 'เสียชีวิต') ? 'block' : 'none';
+            }
+        }
+
+        // --- Modal and Form Logic ---
+        function getFormHTML() {
+            return `
+                <div id="vhv-form" class="space-y-4 text-left">
+                    <div><label class="swal-form-label">1. หมายเลขบัตรประชาชน</label><input id="idCard" type="text" class="swal-form-input" placeholder="กรอก 13 หลัก" maxlength="13"></div>
+                    <div><label class="swal-form-label">2. ชื่อ-นามสกุล</label><input id="fullName" type="text" class="swal-form-input" placeholder="เช่น สมหญิง ใจดี"></div>
+                    <div>
+                        <label class="swal-form-label">3. วันเกิด</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <select id="dob_day" class="swal-form-input"><option value="">วัน</option>${getDayOptions()}</select>
+                            <select id="dob_month" class="swal-form-input"><option value="">เดือน</option>${getMonthOptions()}</select>
+                            <select id="dob_year" class="swal-form-input"><option value="">ปี (พ.ศ.)</option>${getYearOptions(100, 18)}</select>
+                        </div>
+                    </div>
+                    <div><label class="swal-form-label">4. ที่อยู่</label><input id="address" type="text" class="swal-form-input" placeholder="บ้านเลขที่, ถนน"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="swal-form-label">5. หมู่ที่</label><input id="moo" type="text" class="swal-form-input" placeholder="เช่น 1"></div>
+                        <div><label class="swal-form-label">6. ตำบล</label><input id="subDistrict" type="text" class="swal-form-input" placeholder="เช่น โคกเจริญ"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="swal-form-label">7. อำเภอ</label><input id="district" type="text" class="swal-form-input" placeholder="เช่น โคกเจริญ"></div>
+                        <div><label class="swal-form-label">8. จังหวัด</label><input id="province" type="text" class="swal-form-input" placeholder="เช่น ลพบุรี"></div>
+                    </div>
+                    <div><label class="swal-form-label">9. สถานบริการฯ</label><input id="healthFacility" type="text" class="swal-form-input" readonly></div>
+                    <div>
+                        <label class="swal-form-label">10. วันที่ขึ้นทะเบียน</label>
+                         <div class="grid grid-cols-3 gap-2">
+                            <select id="reg_day" class="swal-form-input"><option value="">วัน</option>${getDayOptions()}</select>
+                            <select id="reg_month" class="swal-form-input"><option value="">เดือน</option>${getMonthOptions()}</select>
+                            <select id="reg_year" class="swal-form-input"><option value="">ปี (พ.ศ.)</option>${getYearOptions(60, 0)}</select>
+                        </div>
+                    </div>
+                    <div><label class="swal-form-label">11. เบอร์โทรศัพท์</label><input id="phone" type="text" class="swal-form-input" placeholder="กรอกเบอร์โทรศัพท์" maxlength="10"></div>
+                    <div><label class="swal-form-label">12. บัญชีปฎิบัติงาน</label><input id="workAccount" type="text" class="swal-form-input" placeholder="เช่น บัญชีธนาคาร/หมายเลขพร้อมเพย์"></div>
+                    <div>
+                        <label class="swal-form-label">13. สถานะ อสม.</label>
+                        <select id="status" class="swal-form-input" onchange="toggleStatusDate(this.value)">
+                            <option value="เป็น อสม.">เป็น อสม.</option><option value="ลาออก">ลาออก</option><option value="เสียชีวิต">เสียชีวิต</option>
+                        </select>
+                    </div>
+                    <div id="status-date-wrapper" style="display: none;">
+                        <label class="swal-form-label">วันที่สถานะ (ลาออก/เสียชีวิต)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <select id="status_day" class="swal-form-input"><option value="">วัน</option>${getDayOptions()}</select>
+                            <select id="status_month" class="swal-form-input"><option value="">เดือน</option>${getMonthOptions()}</select>
+                            <select id="status_year" class="swal-form-input"><option value="">ปี (พ.ศ.)</option>${getYearOptions(10, 0)}</select>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function populateForm(data = {}) {
+            document.getElementById('idCard').value = data.idCard || '';
+            document.getElementById('fullName').value = data.fullName || '';
+            document.getElementById('address').value = data.address || '';
+            document.getElementById('moo').value = data.moo || '';
+            document.getElementById('subDistrict').value = data.subDistrict || '';
+            document.getElementById('district').value = data.district || '';
+            document.getElementById('province').value = data.province || '';
+            document.getElementById('healthFacility').value = appState.user.facilityName;
+            document.getElementById('phone').value = data.phone || '';
+            document.getElementById('workAccount').value = data.workAccount || '';
+            document.getElementById('status').value = data.status || 'เป็น อสม.';
+
+            const dobParts = (String(data.dob || '')).split('/');
+            if (dobParts.length === 3) {
+                document.getElementById('dob_day').value = String(dobParts[0]).padStart(2, '0');
+                document.getElementById('dob_month').value = String(dobParts[1]).padStart(2, '0');
+                document.getElementById('dob_year').value = dobParts[2];
+            }
+
+            const regParts = (String(data.regDate || '')).split('/');
+            if (regParts.length === 3) {
+                document.getElementById('reg_day').value = String(regParts[0]).padStart(2, '0');
+                document.getElementById('reg_month').value = String(regParts[1]).padStart(2, '0');
+                document.getElementById('reg_year').value = regParts[2];
+            }
+            
+            const statusDateParts = (String(data.statusDate || '')).split('/');
+            if (statusDateParts.length === 3) {
+                document.getElementById('status_day').value = String(statusDateParts[0]).padStart(2, '0');
+                document.getElementById('status_month').value = String(statusDateParts[1]).padStart(2, '0');
+                document.getElementById('status_year').value = statusDateParts[2];
+            }
+        }
+
+        function collectFormData() {
+            const status = document.getElementById('status').value;
+            const dob = [document.getElementById('dob_day').value, document.getElementById('dob_month').value, document.getElementById('dob_year').value].every(v => v) ? [document.getElementById('dob_day').value, document.getElementById('dob_month').value, document.getElementById('dob_year').value].join('/') : '';
+            const regDate = [document.getElementById('reg_day').value, document.getElementById('reg_month').value, document.getElementById('reg_year').value].every(v => v) ? [document.getElementById('reg_day').value, document.getElementById('reg_month').value, document.getElementById('reg_year').value].join('/') : '';
+            const statusDate = (status === 'ลาออก' || status === 'เสียชีวิต') && [document.getElementById('status_day').value, document.getElementById('status_month').value, document.getElementById('status_year').value].every(v => v) ? [document.getElementById('status_day').value, document.getElementById('status_month').value, document.getElementById('status_year').value].join('/') : '';
+
+            return {
+                idCard: document.getElementById('idCard').value, fullName: document.getElementById('fullName').value, dob,
+                address: document.getElementById('address').value, moo: document.getElementById('moo').value,
+                subDistrict: document.getElementById('subDistrict').value, district: document.getElementById('district').value,
+                province: document.getElementById('province').value, 
+                facilityId: appState.user.facilityId,
+                regDate, phone: document.getElementById('phone').value, workAccount: document.getElementById('workAccount').value,
+                status, statusDate
+            };
+        }
+
+        async function handleFormSubmit(payload) {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST', body: JSON.stringify(payload),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                });
+                if (!response.ok) throw new Error((await response.json()).message || response.statusText);
+                return await response.json();
+            } catch (error) {
+                Swal.showValidationMessage(`Request failed: ${error}`);
+                return null;
+            }
+        }
+
+        // --- CRUD Functions ---
+        function showAddModal() {
+            Swal.fire({
+                title: 'เพิ่มข้อมูล อสม. ใหม่', html: getFormHTML(), width: '800px',
+                didOpen: () => populateForm(),
+                showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#16a34a', cancelButtonColor: '#dc2626',
+                preConfirm: async () => {
+                    const data = collectFormData();
+                    if (!data.idCard || !data.fullName || !data.phone) {
+                        Swal.showValidationMessage('กรุณากรอกข้อมูลที่จำเป็น: บัตรประชาชน, ชื่อ-นามสกุล, และเบอร์โทรศัพท์');
+                        return false;
+                    }
+                    Swal.showLoading();
+                    return await handleFormSubmit({ action: 'create', data });
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    Swal.fire('สำเร็จ!', 'เพิ่มข้อมูล อสม. เรียบร้อยแล้ว', 'success');
+                    fetchData();
+                }
+            });
+        }
+
+        function showEditModal(rowIndex) {
+            const record = appState.vhvData.find(vhv => vhv.rowIndex === rowIndex);
+            if (!record) return;
+            Swal.fire({
+                title: 'แก้ไขข้อมูล อสม.', html: getFormHTML(), width: '800px',
+                didOpen: () => {
+                    populateForm(record.data);
+                    toggleStatusDate(record.data.status || 'เป็น อสม.');
+                },
+                showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข', cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#2563eb', cancelButtonColor: '#dc2626',
+                preConfirm: async () => {
+                    const data = collectFormData();
+                    if (!data.idCard || !data.fullName || !data.phone) {
+                        Swal.showValidationMessage('กรุณากรอกข้อมูลที่จำเป็น: บัตรประชาชน, ชื่อ-นามสกุล, และเบอร์โทรศัพท์');
+                        return false;
+                    }
+                    Swal.showLoading();
+                    return await handleFormSubmit({ action: 'update', rowIndex, data });
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    Swal.fire('สำเร็จ!', 'แก้ไขข้อมูลเรียบร้อยแล้ว', 'success');
+                    fetchData();
+                }
+            });
+        }
+
+        function confirmDelete(rowIndex) {
+            const record = appState.vhvData.find(vhv => vhv.rowIndex === rowIndex);
+            Swal.fire({
+                title: 'ยืนยันการลบข้อมูล',
+                text: `คุณต้องการลบข้อมูลของ "${record.data.fullName}" ใช่หรือไม่?`,
+                icon: 'warning', showCancelButton: true,
+                confirmButtonColor: '#dc2626', cancelButtonColor: '#6b7280',
+                confirmButtonText: 'ใช่, ลบเลย!', cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'กำลังลบข้อมูล...', text: 'กรุณารอสักครู่', allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                            handleFormSubmit({ action: 'delete', rowIndex }).then(res => {
+                                if (res && res.status === 'success') {
+                                    Swal.fire('ลบสำเร็จ!', 'ข้อมูลถูกลบเรียบร้อยแล้ว', 'success');
+                                    fetchData();
+                                } else {
+                                    Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถลบข้อมูลได้', 'error');
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Event Listeners
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        document.getElementById('search-button').addEventListener('click', filterAndRenderTable);
+        document.getElementById('clear-search-button').addEventListener('click', () => {
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-status').value = '';
+            filterAndRenderTable();
+        });
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                filterAndRenderTable();
+            }
+        });
+
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedUser = sessionStorage.getItem('vhvUser');
+            if (storedUser) {
+                appState.user = JSON.parse(storedUser);
+                if (appState.user.facilityId === '00126') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showMainView();
+                }
+            } else {
+                showLoginView();
+            }
+        });
+    </script>
+</body>
+
+    <!-- Go to Top Button -->
+    <button id="goTopBtn" title="Go to top" aria-label="Go to top">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+    </button>
+    <script>
+    // Go to Top Button logic
+    const goTopBtn = document.getElementById('goTopBtn');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 200) {
+            goTopBtn.style.display = 'block';
+        } else {
+            goTopBtn.style.display = 'none';
+        }
+    });
+    goTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    </script>
+</html>
