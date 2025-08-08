@@ -186,7 +186,15 @@
         .stats-card:hover {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
         }
-        
+
+        .cards-wrapper {
+            scrollbar-width: none;
+        }
+
+        .cards-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
         /* Loading animation */
         .loading-pulse {
             animation: float 2s ease-in-out infinite;
