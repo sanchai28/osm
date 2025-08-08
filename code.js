@@ -4,7 +4,7 @@ const USER_SHEET_NAME = "Users";
 const REPORT_SHEET_NAME = "osm1";
 const UNIT_SHEET_NAME = "unit";
 const PDF_SHEET_NAME = "pdf";
-const MEETING_SHEET_NAME = "Meetings"; // Sheet ใหม่สำหรับการประชุม
+const MEETING_SHEET_NAME = "Meetings"; // Sheet for meetings
 const DRIVE_FOLDER_ID = "1QpGglkAIcneqwb4DqnjmU_949JL56ROi";
 
 // --- Column Header Constants ---
@@ -48,7 +48,6 @@ function doPost(e) {
         return createJsonResponse({ status: 'error', message: `Invalid action specified: '${action}'` });
     }
   } catch (error) {
-    Logger.log(`doPost Error: ${error.stack}`);
     return createJsonResponse({ status: 'error', message: error.message });
   }
 }
@@ -57,95 +56,62 @@ function doPost(e) {
 function doGet(e) {
   try {
     const action = e.parameter.action;
-    console.log('doGet called with action:', action);
-    console.log('All parameters:', e.parameter);
-    
+    if (!action) {
+        return createJsonResponse({ status: 'error', message: 'Action parameter is missing from the request.' });
+    }
+
     switch(action) {
         case 'getVhvList': 
-            console.log('Calling getVhvList');
             return getVhvList(e);
+        case 'getVhvData':
+            return getVhvData(e);
         case 'getReportSummary': 
-            console.log('Calling getReportSummary');
             return getReportSummary(e);
         case 'getMonthlyReport': 
-            console.log('Calling getMonthlyReport');
             return getMonthlyReport(e);
         case 'getDashboardData': 
-            console.log('Calling getDashboardData');
             return getDashboardData(e);
         case 'getMeetings': 
-            console.log('Calling handleGetMeetings');
-            return handleGetMeetings(e.parameter); // Add this case!
+            return handleGetMeetings(e.parameter);
         default: 
-            console.log('Default case - calling getVhvData');
-            return getVhvData(e);
+            return createJsonResponse({ status: 'error', message: `Invalid action specified: '${action}'` });
     }
   } catch (error) {
-    console.log(`doGet Error: ${error.stack}`);
     return createJsonResponse({ status: 'error', message: error.message });
   }
 }
 
-// --- Meeting Management Functions (REVISED) ---
-
-/**
- * Fetches all meetings for a given facility, enriching them with attendee names.
- */
+// --- Meeting Management Functions ---
 function handleGetMeetings(params) {
   try {
-    console.log('=== handleGetMeetings started ===');
-    console.log('Received params:', JSON.stringify(params));
-    
     const { facilityId } = params;
     if (!facilityId) {
       throw new Error("Facility ID is required.");
     }
     
-    console.log('Looking for facilityId:', facilityId);
-
-    // Get spreadsheet and check for meetings sheet
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     let meetingSheet = spreadsheet.getSheetByName(MEETING_SHEET_NAME);
     
-    console.log('Meeting sheet name to find:', MEETING_SHEET_NAME);
-    console.log('Meeting sheet found:', !!meetingSheet);
-    
     if (!meetingSheet) {
-      console.log('Creating new meetings sheet...');
       meetingSheet = spreadsheet.insertSheet(MEETING_SHEET_NAME);
       meetingSheet.getRange(1, 1, 1, MEETING_HEADERS.length).setValues([MEETING_HEADERS]);
-      console.log('Created meetings sheet with headers:', MEETING_HEADERS);
       return createJsonResponse({ status: 'success', data: [] });
     }
 
-    // Check if sheet has data
-    if (meetingSheet.getLastRow() === 0) {
-      console.log('Meeting sheet is empty, adding headers...');
-      meetingSheet.getRange(1, 1, 1, MEETING_HEADERS.length).setValues([MEETING_HEADERS]);
-      return createJsonResponse({ status: 'success', data: [] });
-    }
-    
-    if (meetingSheet.getLastRow() === 1) {
-      console.log('Meeting sheet only has headers, no data');
+    if (meetingSheet.getLastRow() <= 1) {
+      if (meetingSheet.getLastRow() === 0) {
+        meetingSheet.getRange(1, 1, 1, MEETING_HEADERS.length).setValues([MEETING_HEADERS]);
+      }
       return createJsonResponse({ status: 'success', data: [] });
     }
 
-    // Get VHV sheet for attendee names
     const vhvSheet = spreadsheet.getSheetByName(VHV_SHEET_NAME);
     const vhvMap = new Map();
-    
     if (vhvSheet && vhvSheet.getLastRow() > 1) {
       const vhvValues = vhvSheet.getDataRange().getValues();
       const vhvHeaders = vhvValues[0].map(h => String(h).trim());
-      
-      const idCardIndex = vhvHeaders.findIndex(h => 
-        h.includes('หมายเลขบัตร') || h.includes('บัตรประชาชน') || h === 'หมายเลขบัตรประชาชน'
-      );
-      const fullNameIndex = vhvHeaders.findIndex(h => 
-        h.includes('ชื่อ') || h.includes('นามสกุล') || h === 'ชื่อ-นามสกุล'
-      );
-      
-      console.log('VHV ID column index:', idCardIndex, 'Name column index:', fullNameIndex);
+      const idCardIndex = vhvHeaders.indexOf('หมายเลขบัตรประชาชน');
+      const fullNameIndex = vhvHeaders.indexOf('ชื่อ-นามสกุล');
       
       if (idCardIndex !== -1 && fullNameIndex !== -1) {
         for (let i = 1; i < vhvValues.length; i++) {
@@ -158,31 +124,15 @@ function handleGetMeetings(params) {
       }
     }
     
-    console.log('VHV map size:', vhvMap.size);
-    
-    // Get meeting data
     const meetingData = getSheetDataAsObjectArray(meetingSheet);
-    console.log('Total meetings in sheet:', meetingData.length);
     
-    // Filter by facility and process
     const facilityMeetings = meetingData
-      .filter(meeting => {
-        const matches = String(meeting.facilityId).trim() === String(facilityId).trim();
-        console.log(`Meeting ${meeting.id}: facilityId="${meeting.facilityId}" vs "${facilityId}" = ${matches}`);
-        return matches;
-      })
+      .filter(meeting => String(meeting.facilityId).trim() === String(facilityId).trim())
       .map(meeting => {
         let attendees = [];
-        
         if (meeting.attendeeIds) {
           try {
-            let attendeeIdArray = [];
-            if (typeof meeting.attendeeIds === 'string' && meeting.attendeeIds.trim() !== '') {
-              attendeeIdArray = JSON.parse(meeting.attendeeIds);
-            } else if (Array.isArray(meeting.attendeeIds)) {
-              attendeeIdArray = meeting.attendeeIds;
-            }
-            
+            let attendeeIdArray = (typeof meeting.attendeeIds === 'string' && meeting.attendeeIds.trim() !== '') ? JSON.parse(meeting.attendeeIds) : (Array.isArray(meeting.attendeeIds) ? meeting.attendeeIds : []);
             if (Array.isArray(attendeeIdArray)) {
               attendees = attendeeIdArray.map(id => ({
                 idCard: id,
@@ -190,70 +140,41 @@ function handleGetMeetings(params) {
               }));
             }
           } catch (e) {
-            console.log(`Error parsing attendeeIds for meeting ${meeting.id}:`, e.message);
+            // Error parsing attendeeIds, leave attendees empty
           }
         }
         
         return {
-          id: meeting.id || '',
-          date: meeting.date || '',
-          topic: meeting.topic || '',
-          summary: meeting.summary || '',
-          facilityId: meeting.facilityId || '',
-          createdBy: meeting.createdBy || '',
-          attendees: attendees
+          id: meeting.id || '', date: meeting.date || '', topic: meeting.topic || '',
+          summary: meeting.summary || '', facilityId: meeting.facilityId || '',
+          createdBy: meeting.createdBy || '', attendees: attendees
         };
       });
 
-    console.log('Filtered meetings for facility:', facilityMeetings.length);
-    console.log('=== handleGetMeetings completed ===');
-    
-    return createJsonResponse({ 
-      status: 'success', 
-      data: facilityMeetings 
-    });
-    
+    return createJsonResponse({ status: 'success', data: facilityMeetings });
   } catch (error) {
-    console.log('=== handleGetMeetings ERROR ===');
-    console.log('Error:', error.message);
-    console.log('Stack:', error.stack);
-    
-    return createJsonResponse({ 
-      status: 'error', 
-      message: `เกิดข้อผิดพลาด: ${error.message}` 
-    });
+    return createJsonResponse({ status: 'error', message: `An error occurred: ${error.message}` });
   }
 }
-/**
- * Adds a new meeting record to the sheet.
- */
+
 function handleAddMeeting(payload) {
   try {
     const meetingSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MEETING_SHEET_NAME);
     if (!meetingSheet) throw new Error(`Sheet "${MEETING_SHEET_NAME}" not found.`);
     
-    const newId = 'M' + new Date().getTime(); // Generate a unique ID
+    const newId = 'M' + new Date().getTime();
     const newRow = [
-      newId,
-      new Date(payload.date),
-      payload.topic,
-      payload.summary,
-      JSON.stringify(payload.attendees || []), // Store attendee IDs as a JSON string
-      payload.facilityId,
-      payload.userId 
+      newId, new Date(payload.date), payload.topic, payload.summary,
+      JSON.stringify(payload.attendees || []), payload.facilityId, payload.userId 
     ];
     
     meetingSheet.appendRow(newRow);
     return createJsonResponse({ status: 'success', message: 'Meeting added successfully.', id: newId });
   } catch (error) {
-    Logger.log(`handleAddMeeting Error: ${error.stack}`);
     return createJsonResponse({ status: 'error', message: 'Error adding meeting: ' + error.message });
   }
 }
 
-/**
- * Updates an existing meeting record.
- */
 function handleUpdateMeeting(payload) {
   try {
     const meetingSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MEETING_SHEET_NAME);
@@ -261,16 +182,11 @@ function handleUpdateMeeting(payload) {
 
     const values = meetingSheet.getDataRange().getValues();
     const idColIndex = values[0].indexOf('id');
-    
     if (idColIndex === -1) throw new Error("Column 'id' not found in Meetings sheet.");
 
     const rowIndex = values.findIndex(row => row[idColIndex] == payload.id);
+    if (rowIndex === -1) return createJsonResponse({ status: 'error', message: 'Meeting not found.' });
 
-    if (rowIndex === -1) {
-      return createJsonResponse({ status: 'error', message: 'Meeting not found.' });
-    }
-
-    // Map payload to the correct column order
     const updatedRow = MEETING_HEADERS.map(header => {
         switch(header) {
             case 'id': return payload.id;
@@ -279,23 +195,18 @@ function handleUpdateMeeting(payload) {
             case 'summary': return payload.summary;
             case 'attendeeIds': return JSON.stringify(payload.attendees || []);
             case 'facilityId': return payload.facilityId;
-            case 'createdBy': return values[rowIndex][MEETING_HEADERS.indexOf('createdBy')]; // Keep original creator
+            case 'createdBy': return values[rowIndex][MEETING_HEADERS.indexOf('createdBy')];
             default: return '';
         }
     });
 
     meetingSheet.getRange(rowIndex + 1, 1, 1, updatedRow.length).setValues([updatedRow]);
-
     return createJsonResponse({ status: 'success', message: 'Meeting updated successfully.' });
   } catch (error) {
-    Logger.log(`handleUpdateMeeting Error: ${error.stack}`);
     return createJsonResponse({ status: 'error', message: 'Error updating meeting: ' + error.message });
   }
 }
 
-/**
- * Deletes a meeting record from the sheet.
- */
 function handleDeleteMeeting(payload) {
   try {
     const meetingSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MEETING_SHEET_NAME);
@@ -303,26 +214,22 @@ function handleDeleteMeeting(payload) {
 
     const values = meetingSheet.getDataRange().getValues();
     const idColIndex = values[0].indexOf('id');
-
     if (idColIndex === -1) throw new Error("Column 'id' not found in Meetings sheet.");
 
     const rowIndex = values.findIndex(row => row[idColIndex] == payload.id);
-
-    if (rowIndex > 0) { // rowIndex > 0 to avoid deleting header
+    if (rowIndex > 0) {
       meetingSheet.deleteRow(rowIndex + 1);
       return createJsonResponse({ status: 'success', message: 'Meeting deleted successfully.' });
     } else {
       return createJsonResponse({ status: 'error', message: 'Meeting not found.' });
     }
   } catch (error) {
-    Logger.log(`handleDeleteMeeting Error: ${error.stack}`);
     return createJsonResponse({ status: 'error', message: 'Error deleting meeting: ' + error.message });
   }
 }
 
 
-// --- Existing Functions (No changes below unless specified) ---
-
+// --- Existing Functions ---
 function handleUploadPdf(payload) {
     const { facilityId, month, year, fileData } = payload;
     const pdfSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PDF_SHEET_NAME);
@@ -744,9 +651,6 @@ function getFacilityNameById(unitData, facilityId) {
     return null; // Not found
 }
 
-/**
- * A generic helper to get all data from a sheet as an array of objects.
- */
 function getSheetDataAsObjectArray(sheet) {
     const values = sheet.getDataRange().getValues();
     if (values.length <= 1) return [];
