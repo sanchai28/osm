@@ -37,9 +37,18 @@
         }
         
         /* Custom Classes */
-        .fade-in-up { animation: fadeInUp 0.6s ease-out; }
-        .fade-in-left { animation: fadeInLeft 0.6s ease-out; }
-        .fade-in-scale { animation: fadeInScale 0.5s ease-out; }
+        .fade-in-up {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .fade-in-left {
+            opacity: 0;
+            animation: fadeInLeft 0.6s ease-out forwards;
+        }
+        .fade-in-scale {
+            opacity: 0;
+            animation: fadeInScale 0.5s ease-out forwards;
+        }
         .hover-lift { transition: all 0.3s ease; }
         .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         
