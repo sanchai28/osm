@@ -9,125 +9,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <style>
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .fade-in-up { opacity: 0; animation: fadeInUp 0.6s ease-out; animation-fill-mode: forwards; }
-        .fade-in-left { animation: fadeInLeft 0.6s ease-out; }
-        .fade-in-scale { animation: fadeInScale 0.5s ease-out; }
-        .hover-lift { transition: all 0.3s ease; }
-        .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        .gradient-button {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .gradient-button:hover {
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
-        }
-        .gradient-button:active {
-            transform: translateY(0px);
-        }
-        .action-button {
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .action-button:hover {
-            transform: scale(1.1);
-        }
-        .action-button:before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: currentColor;
-            opacity: 0.1;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        .action-button:hover:before {
-            width: 50px;
-            height: 50px;
-        }
-        .swal2-popup {
-            border-radius: 20px !important;
-            border: none !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
-            background: rgba(255, 255, 255, 0.9) !important;
-            backdrop-filter: blur(10px) !important;
-        }
-        .swal2-confirm {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
-            border-radius: 12px !important;
-            font-weight: 600 !important;
-            transition: all 0.3s ease !important;
-        }
-        .swal2-confirm:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4) !important;
-        }
-        .swal2-cancel {
-            background-color: #6b7280 !important;
-            border-radius: 12px !important;
-            font-weight: 600 !important;
-            transition: all 0.3s ease !important;
-        }
-        .swal2-cancel:hover {
-            background-color: #4b5563 !important;
-            transform: translateY(-2px) !important;
-        }
-        /* Button styles for report-btn (preserve color logic, but modernize) */
-        .report-btn {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            border: 1px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(.4,0,.2,1);
-            font-weight: 500;
-            min-width: 95px;
-            text-align: center;
-            display: inline-block;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-        }
-        .report-btn.selected {
-            transform: scale(1.07);
-            box-shadow: 0 4px 12px 0 rgba(34,197,94,0.10), 0 2px 4px -2px rgba(99,102,241,0.10);
-            color: #fff;
-        }
+        .swal2-cancel { background-color: #6b7280 !important; border-radius: 12px !important; font-weight: 600 !important; transition: all 0.3s ease !important; }
+        .swal2-cancel:hover { background-color: #4b5563 !important; transform: translateY(-2px) !important; }
+        .report-btn { padding: 0.25rem 0.75rem; border-radius: 9999px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s cubic-bezier(.4,0,.2,1); font-weight: 500; min-width: 95px; text-align: center; display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .report-btn.selected { transform: scale(1.07); box-shadow: 0 4px 12px 0 rgba(34,197,94,0.10), 0 2px 4px -2px rgba(99,102,241,0.10); color: #fff; }
         .btn-paper { background: linear-gradient(90deg,#e0f2fe,#bae6fd); color: #0c4a6e; border-color: #bae6fd; }
         .btn-paper.selected { background: linear-gradient(90deg,#0ea5e9,#0284c7); border-color: #0284c7; }
         .btn-smart { background: linear-gradient(90deg,#f3e8ff,#e9d5ff); color: #6b21a8; border-color: #e9d5ff; }
@@ -139,6 +26,7 @@
         .btn-suspend { background: linear-gradient(90deg,#fee2e2,#fecaca); color: #991b1b; border-color: #fecaca; }
         .btn-suspend.selected { background: linear-gradient(90deg,#ef4444,#dc2626); border-color: #dc2626; }
     </style>
+    
 </head>
 <body class="text-gray-800">
 
