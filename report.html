@@ -72,7 +72,19 @@
             <input type="file" id="pdf-upload-input" class="hidden" accept="application/pdf">
 
             <div id="summary-grid-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-                <!-- Summary cards will be populated here -->
+                <!-- MODIFIED: Add initial loading state directly into HTML -->
+                <div class="col-span-full flex flex-col justify-center items-center gap-4 p-12 text-gray-500">
+                    <div class="relative">
+                        <div class="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <img src="osm.png" alt="Loading..." class="w-8 h-8">
+                        </div>
+                    </div>
+                    <div class="text-center text-white/80">
+                        <div class="text-lg font-semibold">กำลังโหลดข้อมูล</div>
+                        <div class="text-sm">กรุณารอสักครู่...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -87,7 +99,7 @@
         const fiscalMonths = [
             { month: 10, name: 'ตุลาคม' }, { month: 11, name: 'พฤศจิกายน' }, { month: 12, name: 'ธันวาคม' },
             { month: 1, name: 'มกราคม' }, { month: 2, name: 'กุมภาพันธ์' }, { month: 3, name: 'มีนาคม' },
-            { month: 4, name: 'เมษายน' }, { month: 5, name: 'พฤษภาคม' }, { month: 6, name: 'มิถุนายน' },
+            { month: 4, name: 'เมษายน' }, { month: 5, name: 'พฤษภาคม' }, { month: 6, 'name': 'มิถุนายน' },
             { month: 7, name: 'กรกฎาคม' }, { month: 8, name: 'สิงหาคม' }, { month: 9, name: 'กันยายน' }
         ];
 
@@ -123,7 +135,7 @@
         }
 
         async function fetchReportSummary() {
-            showLoadingSpinner();
+            // MODIFIED: No need to show spinner here as it's in the HTML
             const fiscalYear = fiscalYearSelect.value;
             try {
                 const url = new URL(APPS_SCRIPT_URL);
@@ -140,25 +152,11 @@
             }
         }
         
-        function showLoadingSpinner() {
-            summaryContainer.innerHTML = `
-                <div class="col-span-full flex flex-col justify-center items-center gap-4 p-12 text-gray-500">
-                    <div class="relative">
-                        <div class="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <img src="osm.png" alt="Loading..." class="w-8 h-8">
-                        </div>
-                    </div>
-                    <div class="text-center text-white/80">
-                        <div class="text-lg font-semibold">กำลังโหลดข้อมูล</div>
-                        <div class="text-sm">กรุณารอสักครู่...</div>
-                    </div>
-                </div>
-            `;
-        }
+        // MODIFIED: This function is no longer needed as the spinner is part of the initial HTML
+        // function showLoadingSpinner() { ... }
 
         function renderSummaryCards(summaryData) {
-            summaryContainer.innerHTML = '';
+            summaryContainer.innerHTML = ''; // Clear the loading spinner
             const fiscalYear = parseInt(fiscalYearSelect.value);
 
             fiscalMonths.forEach((monthInfo, index) => {
