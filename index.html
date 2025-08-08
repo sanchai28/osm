@@ -301,50 +301,83 @@
 
         // --- Modal and Form Logic ---
         function getFormHTML() {
+            const inputClass = 'mt-1 block w-full rounded-xl border-2 border-gray-200 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50';
             return `
-                <div id="vhv-form" class="space-y-4 text-left">
-                    <div><label class="swal-form-label">1. หมายเลขบัตรประชาชน</label><input id="idCard" type="text" class="swal-form-input" placeholder="กรอก 13 หลัก" maxlength="13"></div>
-                    <div><label class="swal-form-label">2. ชื่อ-นามสกุล</label><input id="fullName" type="text" class="swal-form-input" placeholder="เช่น สมหญิง ใจดี"></div>
-                    <div>
-                        <label class="swal-form-label">3. วันเกิด</label>
+                <div id="vhv-form" class="space-y-6 text-left max-w-4xl mx-auto">
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">1. หมายเลขบัตรประชาชน</label>
+                        <input id="idCard" type="text" class="${inputClass}" placeholder="กรอก 13 หลัก" maxlength="13">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">2. ชื่อ-นามสกุล</label>
+                        <input id="fullName" type="text" class="${inputClass}" placeholder="เช่น สมหญิง ใจดี">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">3. วันเกิด</label>
                         <div class="grid grid-cols-3 gap-2">
-                            <select id="dob_day" class="swal-form-input"><option value="">วัน</option>${getDayOptions()}</select>
-                            <select id="dob_month" class="swal-form-input"><option value="">เดือน</option>${getMonthOptions()}</select>
-                            <select id="dob_year" class="swal-form-input"><option value="">ปี (พ.ศ.)</option>${getYearOptions(100, 18)}</select>
+                            <select id="dob_day" class="${inputClass}"><option value="">วัน</option>${getDayOptions()}</select>
+                            <select id="dob_month" class="${inputClass}"><option value="">เดือน</option>${getMonthOptions()}</select>
+                            <select id="dob_year" class="${inputClass}"><option value="">ปี (พ.ศ.)</option>${getYearOptions(100, 18)}</select>
                         </div>
                     </div>
-                    <div><label class="swal-form-label">4. ที่อยู่</label><input id="address" type="text" class="swal-form-input" placeholder="บ้านเลขที่, ถนน"></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="swal-form-label">5. หมู่ที่</label><input id="moo" type="text" class="swal-form-input" placeholder="เช่น 1"></div>
-                        <div><label class="swal-form-label">6. ตำบล</label><input id="subDistrict" type="text" class="swal-form-input" placeholder="เช่น โคกเจริญ"></div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">4. ที่อยู่</label>
+                        <input id="address" type="text" class="${inputClass}" placeholder="บ้านเลขที่, ถนน">
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="swal-form-label">7. อำเภอ</label><input id="district" type="text" class="swal-form-input" placeholder="เช่น โคกเจริญ"></div>
-                        <div><label class="swal-form-label">8. จังหวัด</label><input id="province" type="text" class="swal-form-input" placeholder="เช่น ลพบุรี"></div>
-                    </div>
-                    <div><label class="swal-form-label">9. สถานบริการฯ</label><input id="healthFacility" type="text" class="swal-form-input" readonly></div>
-                    <div>
-                        <label class="swal-form-label">10. วันที่ขึ้นทะเบียน</label>
-                         <div class="grid grid-cols-3 gap-2">
-                            <select id="reg_day" class="swal-form-input"><option value="">วัน</option>${getDayOptions()}</select>
-                            <select id="reg_month" class="swal-form-input"><option value="">เดือน</option>${getMonthOptions()}</select>
-                            <select id="reg_year" class="swal-form-input"><option value="">ปี (พ.ศ.)</option>${getYearOptions(60, 0)}</select>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">5. หมู่ที่</label>
+                            <input id="moo" type="text" class="${inputClass}" placeholder="เช่น 1">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">6. ตำบล</label>
+                            <input id="subDistrict" type="text" class="${inputClass}" placeholder="เช่น โคกเจริญ">
                         </div>
                     </div>
-                    <div><label class="swal-form-label">11. เบอร์โทรศัพท์</label><input id="phone" type="text" class="swal-form-input" placeholder="กรอกเบอร์โทรศัพท์" maxlength="10"></div>
-                    <div><label class="swal-form-label">12. บัญชีปฎิบัติงาน</label><input id="workAccount" type="text" class="swal-form-input" placeholder="เช่น บัญชีธนาคาร/หมายเลขพร้อมเพย์"></div>
-                    <div>
-                        <label class="swal-form-label">13. สถานะ อสม.</label>
-                        <select id="status" class="swal-form-input" onchange="toggleStatusDate(this.value)">
-                            <option value="เป็น อสม.">เป็น อสม.</option><option value="ลาออก">ลาออก</option><option value="เสียชีวิต">เสียชีวิต</option>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">7. อำเภอ</label>
+                            <input id="district" type="text" class="${inputClass}" placeholder="เช่น โคกเจริญ">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">8. จังหวัด</label>
+                            <input id="province" type="text" class="${inputClass}" placeholder="เช่น ลพบุรี">
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">9. สถานบริการฯ</label>
+                        <input id="healthFacility" type="text" class="${inputClass} bg-gray-100" readonly>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">10. วันที่ขึ้นทะเบียน</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <select id="reg_day" class="${inputClass}"><option value="">วัน</option>${getDayOptions()}</select>
+                            <select id="reg_month" class="${inputClass}"><option value="">เดือน</option>${getMonthOptions()}</select>
+                            <select id="reg_year" class="${inputClass}"><option value="">ปี (พ.ศ.)</option>${getYearOptions(60, 0)}</select>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">11. เบอร์โทรศัพท์</label>
+                        <input id="phone" type="text" class="${inputClass}" placeholder="กรอกเบอร์โทรศัพท์" maxlength="10">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">12. บัญชีปฎิบัติงาน</label>
+                        <input id="workAccount" type="text" class="${inputClass}" placeholder="เช่น บัญชีธนาคาร/หมายเลขพร้อมเพย์">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">13. สถานะ อสม.</label>
+                        <select id="status" class="${inputClass}" onchange="toggleStatusDate(this.value)">
+                            <option value="เป็น อสม.">เป็น อสม.</option>
+                            <option value="ลาออก">ลาออก</option>
+                            <option value="เสียชีวิต">เสียชีวิต</option>
                         </select>
                     </div>
-                    <div id="status-date-wrapper" style="display: none;">
-                        <label class="swal-form-label">วันที่สถานะ (ลาออก/เสียชีวิต)</label>
+                    <div id="status-date-wrapper" class="space-y-2" style="display: none;">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">วันที่สถานะ (ลาออก/เสียชีวิต)</label>
                         <div class="grid grid-cols-3 gap-2">
-                            <select id="status_day" class="swal-form-input"><option value="">วัน</option>${getDayOptions()}</select>
-                            <select id="status_month" class="swal-form-input"><option value="">เดือน</option>${getMonthOptions()}</select>
-                            <select id="status_year" class="swal-form-input"><option value="">ปี (พ.ศ.)</option>${getYearOptions(10, 0)}</select>
+                            <select id="status_day" class="${inputClass}"><option value="">วัน</option>${getDayOptions()}</select>
+                            <select id="status_month" class="${inputClass}"><option value="">เดือน</option>${getMonthOptions()}</select>
+                            <select id="status_year" class="${inputClass}"><option value="">ปี (พ.ศ.)</option>${getYearOptions(10, 0)}</select>
                         </div>
                     </div>
                 </div>
@@ -420,10 +453,18 @@
         // --- CRUD Functions ---
         function showAddModal() {
             Swal.fire({
-                title: 'เพิ่มข้อมูล อสม. ใหม่', html: getFormHTML(), width: '800px',
+                title: `<div class="flex items-center gap-3 justify-center"><div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg></div><span class="text-2xl font-bold text-gray-800">เพิ่มข้อมูล อสม.</span></div>`,
+                html: getFormHTML(),
+                width: '900px',
+                showCancelButton: true,
+                confirmButtonText: 'บันทึกข้อมูล',
+                cancelButtonText: 'ยกเลิก',
+                customClass: {
+                    confirmButton: 'gradient-button text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover-lift',
+                    cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover-lift'
+                },
+                buttonsStyling: false,
                 didOpen: () => populateForm(),
-                showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', cancelButtonText: 'ยกเลิก',
-                confirmButtonColor: '#16a34a', cancelButtonColor: '#dc2626',
                 preConfirm: async () => {
                     const data = collectFormData();
                     if (!data.idCard || !data.fullName || !data.phone) {
@@ -435,7 +476,16 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed && result.value) {
-                    Swal.fire('สำเร็จ!', 'เพิ่มข้อมูล อสม. เรียบร้อยแล้ว', 'success');
+                    Swal.fire({
+                        title: 'สำเร็จ!',
+                        text: 'เพิ่มข้อมูล อสม. เรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonText: 'ตกลง',
+                        customClass: {
+                            confirmButton: 'gradient-button text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                        },
+                        buttonsStyling: false
+                    });
                     fetchData();
                 }
             });
@@ -445,13 +495,21 @@
             const record = appState.vhvData.find(vhv => vhv.rowIndex === rowIndex);
             if (!record) return;
             Swal.fire({
-                title: 'แก้ไขข้อมูล อสม.', html: getFormHTML(), width: '800px',
+                title: `<div class="flex items-center gap-3 justify-center"><div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></div><span class="text-2xl font-bold text-gray-800">แก้ไขข้อมูล อสม.</span></div>`,
+                html: getFormHTML(),
+                width: '900px',
+                showCancelButton: true,
+                confirmButtonText: 'บันทึกการแก้ไข',
+                cancelButtonText: 'ยกเลิก',
+                customClass: {
+                    confirmButton: 'gradient-button text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover-lift',
+                    cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover-lift'
+                },
+                buttonsStyling: false,
                 didOpen: () => {
                     populateForm(record.data);
                     toggleStatusDate(record.data.status || 'เป็น อสม.');
                 },
-                showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข', cancelButtonText: 'ยกเลิก',
-                confirmButtonColor: '#2563eb', cancelButtonColor: '#dc2626',
                 preConfirm: async () => {
                     const data = collectFormData();
                     if (!data.idCard || !data.fullName || !data.phone) {
@@ -463,7 +521,16 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed && result.value) {
-                    Swal.fire('สำเร็จ!', 'แก้ไขข้อมูลเรียบร้อยแล้ว', 'success');
+                    Swal.fire({
+                        title: 'สำเร็จ!',
+                        text: 'แก้ไขข้อมูลเรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonText: 'ตกลง',
+                        customClass: {
+                            confirmButton: 'gradient-button text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                        },
+                        buttonsStyling: false
+                    });
                     fetchData();
                 }
             });
@@ -472,23 +539,48 @@
         function confirmDelete(rowIndex) {
             const record = appState.vhvData.find(vhv => vhv.rowIndex === rowIndex);
             Swal.fire({
-                title: 'ยืนยันการลบข้อมูล',
-                text: `คุณต้องการลบข้อมูลของ "${record.data.fullName}" ใช่หรือไม่?`,
-                icon: 'warning', showCancelButton: true,
-                confirmButtonColor: '#dc2626', cancelButtonColor: '#6b7280',
-                confirmButtonText: 'ใช่, ลบเลย!', cancelButtonText: 'ยกเลิก'
+                title: `<div class="text-center"><div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></div><span class="text-2xl font-bold text-gray-800">ยืนยันการลบ?</span></div>`,
+                html: `<p class="font-semibold text-red-800">"${record.data.fullName}"</p>`,
+                showCancelButton: true,
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก',
+                customClass: {
+                    confirmButton: 'bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift',
+                    cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                },
+                buttonsStyling: false
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({
-                        title: 'กำลังลบข้อมูล...', text: 'กรุณารอสักครู่', allowOutsideClick: false,
+                        title: 'กำลังลบข้อมูล...',
+                        text: 'กรุณารอสักครู่',
+                        allowOutsideClick: false,
                         didOpen: () => {
                             Swal.showLoading();
                             handleFormSubmit({ action: 'delete', rowIndex }).then(res => {
                                 if (res && res.status === 'success') {
-                                    Swal.fire('ลบสำเร็จ!', 'ข้อมูลถูกลบเรียบร้อยแล้ว', 'success');
+                                    Swal.fire({
+                                        title: 'ลบสำเร็จ!',
+                                        text: 'ข้อมูลถูกลบเรียบร้อยแล้ว',
+                                        icon: 'success',
+                                        confirmButtonText: 'ตกลง',
+                                        customClass: {
+                                            confirmButton: 'gradient-button text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                                        },
+                                        buttonsStyling: false
+                                    });
                                     fetchData();
                                 } else {
-                                    Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถลบข้อมูลได้', 'error');
+                                    Swal.fire({
+                                        title: 'เกิดข้อผิดพลาด!',
+                                        text: 'ไม่สามารถลบข้อมูลได้',
+                                        icon: 'error',
+                                        confirmButtonText: 'ตกลง',
+                                        customClass: {
+                                            confirmButton: 'bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                                        },
+                                        buttonsStyling: false
+                                    });
                                 }
                             });
                         }
