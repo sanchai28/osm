@@ -8,62 +8,135 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style> 
-        html {
-            scroll-behavior: smooth;
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sticky-nav-height: 180px; /* Default value, will be recalculated */
         }
-        body { 
-            font-family: 'Sarabun', sans-serif; 
-            background-color: #f0f7ff; 
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
-        .month-tag { 
-            scroll-margin-top: 300px !important; /* เพิ่ม !important และเพิ่มค่า */ 
+        
+        /* Modern Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Custom Classes */
+        .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+        .fade-in-left { animation: fadeInLeft 0.6s ease-out; }
+        .fade-in-scale { animation: fadeInScale 0.5s ease-out; }
+        .hover-lift { transition: all 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .month-card {
+            scroll-margin-top: var(--sticky-nav-height);
+        }
+
         .month-nav-item.active {
-            background-color: #1d4ed8;
-            color: white;
+            background: linear-gradient(90deg,#6366f1,#8b5cf6);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .swal2-popup {
+            border-radius: 20px !important;
+            border: none !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+        }
+        
+        .swal2-confirm {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .swal2-confirm:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4) !important;
         }
     </style>
 </head>
 <body class="text-gray-800">
 
     <div id="main-view">
-        <nav class="bg-blue-800 text-white p-4 shadow-lg flex justify-between items-center sticky top-0 z-20">
-            <div class="flex items-center gap-3">
-                <img src="osm.png" alt="Logo" class="h-16 w-16 object-contain">
-                <h1 id="facility-name-header" class="text-xl font-bold">Dashboard ภาพรวม</h1>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="text-right">
-                    <div id="user-name" class="font-semibold"></div>
-                    <div id="user-position" class="text-sm text-blue-200"></div>
+        <!-- Main Navigation -->
+        <nav class="glass-nav text-white p-4 shadow-2xl sticky top-0 z-30">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-4 fade-in-left">
+                    <img src="osm.png" alt="Logo" class="h-16 w-16 object-contain">
+                    <div>
+                        <h1 id="facility-name-header" class="text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">Dashboard ภาพรวม</h1>
+                        <div class="text-sm text-white text-opacity-80">สรุปรายงาน อสม. ทั้งหมด</div>
+                    </div>
                 </div>
-                <button onclick="handleLogout()" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
-                    ออกจากระบบ
-                </button>
+                <div class="flex items-center gap-6">
+                    <div class="text-right hidden md:block">
+                        <div id="user-name" class="font-semibold text-white"></div>
+                        <div id="user-position" class="text-sm text-white text-opacity-70"></div>
+                    </div>
+                    <button onclick="handleLogout()" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-xl shadow-lg hover-lift transition-all duration-300">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                        </svg>
+                        ออกจากระบบ
+                    </button>
+                </div>
             </div>
         </nav>
         
-        <div class="sticky top-[72px] bg-white/90 backdrop-blur-sm shadow-sm z-10">
-            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-                 <h2 class="text-lg font-bold text-gray-800">ภาพรวมปีงบประมาณ</h2>
-                 <div class="flex items-center gap-2">
-                    <label for="fiscal-year-select" class="font-semibold text-sm">เลือกปีงบประมาณ:</label>
-                    <select id="fiscal-year-select" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"></select>
-                </div>
-            </div>
-             <!-- Sticky Month Navigation -->
-            <div id="month-nav" class="overflow-x-auto border-t">
-                <div class="container mx-auto px-4">
-                    <div class="flex space-x-2 py-2">
-                        <!-- Month tags will be populated here -->
+        <!-- Sticky Sub-Navigation -->
+        <div id="sticky-nav-container" class="sticky top-[88px] z-20 transition-all duration-300">
+            <div class="container mx-auto px-4 py-3">
+                <div class="glass-card rounded-2xl p-4 shadow-xl">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-lg font-bold text-gray-800">ภาพรวมปีงบประมาณ</h2>
+                            <select id="fiscal-year-select" class="p-2 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm font-semibold"></select>
+                        </div>
+                        <div id="month-nav" class="w-full md:w-auto overflow-x-auto">
+                            <div class="flex space-x-1 p-1 bg-gray-200/50 rounded-lg">
+                                <!-- Month tags will be populated here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-
+        <!-- Main Content -->
         <div class="container mx-auto p-4 sm:p-6 lg:p-8">
             <div id="dashboard-content" class="space-y-8">
                 <!-- Dashboard cards will be populated here -->
@@ -79,31 +152,19 @@
         let appState = { user: null };
 
         const fiscalMonths = [
-            { month: 10, name: 'ตุลาคม' }, { month: 11, name: 'พฤศจิกายน' }, { month: 12, name: 'ธันวาคม' },
-            { month: 1, name: 'มกราคม' }, { month: 2, name: 'กุมภาพันธ์' }, { month: 3, name: 'มีนาคม' },
-            { month: 4, name: 'เมษายน' }, { month: 5, name: 'พฤษภาคม' }, { month: 6, name: 'มิถุนายน' },
-            { month: 7, name: 'กรกฎาคม' }, { month: 8, name: 'สิงหาคม' }, { month: 9, name: 'กันยายน' }
+            { month: 10, name: 'ต.ค.', fullName: 'ตุลาคม' }, { month: 11, name: 'พ.ย.', fullName: 'พฤศจิกายน' }, { month: 12, name: 'ธ.ค.', fullName: 'ธันวาคม' },
+            { month: 1, name: 'ม.ค.', fullName: 'มกราคม' }, { month: 2, name: 'ก.พ.', fullName: 'กุมภาพันธ์' }, { month: 3, name: 'มี.ค.', fullName: 'มีนาคม' },
+            { month: 4, name: 'เม.ย.', fullName: 'เมษายน' }, { month: 5, name: 'พ.ค.', fullName: 'พฤษภาคม' }, { month: 6, name: 'มิ.ย.', fullName: 'มิถุนายน' },
+            { month: 7, name: 'ก.ค.', fullName: 'กรกฎาคม' }, { month: 8, name: 'ส.ค.', fullName: 'สิงหาคม' }, { month: 9, name: 'ก.ย.', fullName: 'กันยายน' }
         ];
 
         function calculateStickyNavHeight() {
-            const topNav = document.querySelector('nav.bg-blue-800');
-            const stickySection = document.querySelector('div.sticky');
-            
-            let totalHeight = 0;
-            
-            if (topNav) {
-                totalHeight += topNav.offsetHeight;
+            const mainNav = document.querySelector('nav.glass-nav');
+            const stickyNav = document.getElementById('sticky-nav-container');
+            if (mainNav && stickyNav) {
+                const height = mainNav.offsetHeight + stickyNav.offsetHeight + 20; // Main nav + Sub nav + extra padding
+                document.documentElement.style.setProperty('--sticky-nav-height', `${height}px`);
             }
-            
-            if (stickySection) {
-                totalHeight += stickySection.offsetHeight;
-            }
-            
-            totalHeight += 30; // เพิ่ม padding
-            
-            document.documentElement.style.setProperty('--sticky-nav-height', `${totalHeight}px`);
-            
-            return totalHeight;
         }
 
         function populateFiscalYearSelect() {
@@ -115,7 +176,7 @@
                 const year = currentFiscalYear - i;
                 const option = document.createElement('option');
                 option.value = year;
-                option.textContent = year;
+                option.textContent = `พ.ศ. ${year}`;
                 fiscalYearSelect.appendChild(option);
             }
             fiscalYearSelect.addEventListener('change', fetchDashboardData);
@@ -133,11 +194,6 @@
                 document.getElementById('user-position').textContent = appState.user.position;
                 populateFiscalYearSelect();
                 createMonthNav();
-                
-                setTimeout(() => {
-                    calculateStickyNavHeight();
-                }, 500);
-                
                 await fetchDashboardData();
             } else {
                 window.location.href = 'index.html';
@@ -155,42 +211,28 @@
                 const a = document.createElement('a');
                 a.href = `#month-${m.month}`;
                 a.id = `month-nav-${m.month}`;
-                a.className = 'month-nav-item px-4 py-2 rounded-md text-sm font-semibold text-gray-600 hover:bg-blue-100 hover:text-blue-700 whitespace-nowrap transition-colors';
+                a.className = 'month-nav-item px-3 py-2 rounded-md text-sm font-semibold text-gray-600 hover:bg-white/80 hover:text-blue-700 whitespace-nowrap transition-all duration-300';
                 a.textContent = m.name;
-
                 a.addEventListener('click', (e) => {
                     e.preventDefault();
-                    scrollToMonthCard(m.month, 'smooth');
+                    const targetElement = document.querySelector(`#month-${m.month}`);
+                    if (targetElement) {
+                        const stickyNavHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height'), 10) || 180;
+                        const elementPosition = targetElement.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.scrollY - stickyNavHeight;
+                        
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
                 });
-
                 monthNav.appendChild(a);
             });
         }
 
-        function scrollToMonthCard(month, behavior = 'auto') {
-            const targetElement = document.getElementById(`month-${month}`);
-            if (targetElement) {
-                let stickyNavHeight = 0;
-                const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height');
-                if (cssVar) {
-                    stickyNavHeight = parseInt(cssVar, 10) || 0;
-                } else {
-                    const topNav = document.querySelector('nav.bg-blue-800');
-                    const stickySection = document.querySelector('div.sticky');
-                    if (topNav) stickyNavHeight += topNav.offsetHeight;
-                    if (stickySection) stickyNavHeight += stickySection.offsetHeight;
-                    stickyNavHeight += 30;
-                }
-                const offsetTop = targetElement.getBoundingClientRect().top + window.scrollY - stickyNavHeight;
-                window.scrollTo({
-                    top: offsetTop,
-                    behavior
-                });
-            }
-        }
-
         async function fetchDashboardData() {
-            dashboardContent.innerHTML = `<div class="col-span-full flex justify-center items-center gap-4 p-8 text-gray-500"><img src="osm.gif" alt="Loading..." class="w-16 h-16"><span class="text-lg">กำลังโหลดข้อมูล Dashboard...</span></div>`;
+            showLoadingSpinner();
             const fiscalYear = fiscalYearSelect.value;
             try {
                 const url = new URL(APPS_SCRIPT_URL);
@@ -202,16 +244,32 @@
                 const dashboardData = await response.json();
                 renderDashboard(dashboardData);
             } catch (error) {
-                dashboardContent.innerHTML = `<p class="col-span-full text-center p-8 text-red-500">${error.message}</p>`;
+                dashboardContent.innerHTML = `<div class="col-span-full text-center p-8 text-red-100 bg-red-500/20 rounded-2xl glass-card">${error.message}</div>`;
             }
+        }
+
+        function showLoadingSpinner() {
+             dashboardContent.innerHTML = `
+                <div class="col-span-full flex flex-col justify-center items-center gap-4 p-12 text-gray-500">
+                    <div class="relative">
+                        <div class="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-purple-600"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <img src="osm.png" alt="Loading..." class="w-8 h-8">
+                        </div>
+                    </div>
+                    <div class="text-center text-white/80">
+                        <div class="text-lg font-semibold">กำลังโหลดข้อมูล Dashboard</div>
+                        <div class="text-sm">กรุณารอสักครู่...</div>
+                    </div>
+                </div>
+            `;
         }
 
         function renderDashboard(data) {
             dashboardContent.innerHTML = '';
             const fiscalYear = parseInt(fiscalYearSelect.value);
 
-            // Render monthly cards
-            fiscalMonths.forEach(monthInfo => {
+            fiscalMonths.forEach((monthInfo, index) => {
                 const year = monthInfo.month >= 10 ? fiscalYear - 1 : fiscalYear;
                 const monthData = data.summary[monthInfo.month] || {};
                 
@@ -221,134 +279,111 @@
 
                 data.units.forEach(unit => {
                     const unitData = monthData[unit.id] || { paid: 0, suspended: 0, fileUrl: null };
-                    
                     totalPaidInMonth += unitData.paid || 0;
                     totalSuspendedInMonth += unitData.suspended || 0;
 
                     const viewFileIcon = unitData.fileUrl 
-                        ? `<a href="${unitData.fileUrl}" target="_blank" title="ดูไฟล์ PDF"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 hover:text-blue-700" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg></a>`
-                        : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>`;
+                        ? `<a href="${unitData.fileUrl}" target="_blank" title="ดูไฟล์ PDF" class="text-blue-500 hover:text-blue-700 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg></a>`
+                        : `<span class="text-gray-300"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.367zM10 18a8 8 0 110-16 8 8 0 010 16z" clip-rule="evenodd" /></svg></span>`;
 
                     facilityRows += `
-                        <tr class="border-b last:border-b-0 hover:bg-gray-50">
-                            <td class="py-2 px-4 text-left">${unit.name}</td>
-                            <td class="py-2 px-4 text-center text-green-600 font-semibold">${unitData.paid.toLocaleString()}</td>
-                            <td class="py-2 px-4 text-center text-red-600 font-semibold">${unitData.suspended.toLocaleString()}</td>
-                            <td class="py-2 px-4 flex justify-center">${viewFileIcon}</td>
+                        <tr class="border-b border-gray-200/50 last:border-b-0 hover:bg-gray-500/5 transition-colors">
+                            <td class="py-3 px-4 text-left">${unit.name}</td>
+                            <td class="py-3 px-4 text-center text-green-600 font-semibold">${(unitData.paid || 0).toLocaleString()}</td>
+                            <td class="py-3 px-4 text-center text-red-600 font-semibold">${(unitData.suspended || 0).toLocaleString()}</td>
+                            <td class="py-3 px-4 flex justify-center">${viewFileIcon}</td>
                         </tr>
                     `;
                 });
 
                 const monthCard = document.createElement('div');
                 monthCard.id = `month-${monthInfo.month}`;
-                monthCard.className = 'month-tag bg-white rounded-xl shadow-lg overflow-hidden';
+                monthCard.className = 'month-card glass-card rounded-2xl shadow-lg overflow-hidden fade-in-up hover-lift';
+                monthCard.style.animationDelay = `${index * 50}ms`;
                 monthCard.innerHTML = `
-                    <h3 class="text-xl font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 p-4">${monthInfo.name} ${year}</h3>
-                    <div class="max-h-[400px] overflow-y-auto">
+                    <div class="p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white flex justify-between items-center">
+                        <h3 class="text-xl font-bold">${monthInfo.fullName} ${year}</h3>
+                        <div class="text-right">
+                           <div class="font-bold text-lg">${(totalPaidInMonth + totalSuspendedInMonth).toLocaleString()} <span class="text-sm font-normal">คน</span></div>
+                           <div class="text-xs opacity-80">ยอดรวม</div>
+                        </div>
+                    </div>
+                    <div class="max-h-[450px] overflow-y-auto">
                         <table class="w-full text-sm">
-                            <colgroup>
-                                <col style="width: 50%;">
-                                <col style="width: 20%;">
-                                <col style="width: 20%;">
-                                <col style="width: 10%;">
-                            </colgroup>
-                            <thead>
-                                <tr class="bg-gray-50">
-                                    <th class="py-2 px-4 text-left font-semibold text-gray-600">หน่วยบริการ</th>
-                                    <th class="py-2 px-4 text-center font-semibold text-gray-600">เบิกจ่าย</th>
-                                    <th class="py-2 px-4 text-center font-semibold text-gray-600">ระงับ</th>
-                                    <th class="py-2 px-4 text-center font-semibold text-gray-600">ไฟล์</th>
+                            <thead class="sticky top-0 bg-white/80 backdrop-blur-sm">
+                                <tr class="border-b border-gray-200">
+                                    <th class="py-3 px-4 text-left font-semibold text-gray-600 w-1/2">หน่วยบริการ</th>
+                                    <th class="py-3 px-4 text-center font-semibold text-gray-600">เบิกจ่าย</th>
+                                    <th class="py-3 px-4 text-center font-semibold text-gray-600">ระงับ</th>
+                                    <th class="py-3 px-4 text-center font-semibold text-gray-600">ไฟล์</th>
                                 </tr>
                             </thead>
                             <tbody>${facilityRows}</tbody>
-                            <tfoot>
-                                <tr class="bg-gray-100 font-bold">
-                                    <td class="py-2 px-4 text-right">รวม</td>
-                                    <td class="py-2 px-4 text-center text-green-700">${totalPaidInMonth.toLocaleString()}</td>
-                                    <td class="py-2 px-4 text-center text-red-700">${totalSuspendedInMonth.toLocaleString()}</td>
-                                    <td class="py-2 px-4"></td>
-                                </tr>
-                            </tfoot>
                         </table>
+                    </div>
+                     <div class="p-3 bg-gray-500/5 text-right font-bold border-t border-gray-200/50">
+                        <span class="mr-4">รวม:</span>
+                        <span class="text-green-700 mr-4">เบิกจ่าย ${totalPaidInMonth.toLocaleString()}</span>
+                        <span class="text-red-700">ระงับ ${totalSuspendedInMonth.toLocaleString()}</span>
                     </div>
                 `;
                 dashboardContent.appendChild(monthCard);
             });
             
+            // Recalculate height and setup spy after rendering
+            calculateStickyNavHeight();
             setupScrollSpy();
             
-            setTimeout(() => {
-                calculateStickyNavHeight();
-            }, 200);
-            
+            // Auto-scroll logic
             const currentMonthJS = new Date().getMonth() + 1;
             const currentYearBE = new Date().getFullYear() + 543;
             const selectedFiscalYear = parseInt(fiscalYearSelect.value, 10);
-            
             const actualCurrentFiscalYear = currentMonthJS >= 10 ? currentYearBE + 1 : currentYearBE;
 
             if (selectedFiscalYear === actualCurrentFiscalYear) {
-                const currentMonthCard = document.getElementById(`month-${currentMonthJS}`);
-                if (currentMonthCard) {
-                    setTimeout(() => {
-                        let stickyNavHeight = 0;
-                        const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height');
-                        if (cssVar) {
-                            stickyNavHeight = parseInt(cssVar, 10) || 0;
-                        } else {
-                            const topNav = document.querySelector('nav.bg-blue-800');
-                            const stickySection = document.querySelector('div.sticky');
-                            if (topNav) stickyNavHeight += topNav.offsetHeight;
-                            if (stickySection) stickyNavHeight += stickySection.offsetHeight;
-                            stickyNavHeight += 30;
-                        }
-                        const offsetTop = currentMonthCard.getBoundingClientRect().top + window.scrollY - stickyNavHeight;
+                setTimeout(() => {
+                    const targetElement = document.getElementById(`month-${currentMonthJS}`);
+                    if (targetElement) {
+                        const stickyNavHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height'), 10) || 180;
+                        const elementPosition = targetElement.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.scrollY - stickyNavHeight;
+                        
                         window.scrollTo({
-                            top: offsetTop,
+                            top: offsetPosition,
                             behavior: 'auto'
                         });
-                    }, 100);
-                }
+                    }
+                }, 300);
             }
         }
 
-        let scrollSpyObserver = null;
         function setupScrollSpy() {
-            if (scrollSpyObserver) {
-                scrollSpyObserver.disconnect();
-            }
+            const options = {
+                root: null,
+                rootMargin: `-${(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height'), 10) || 180)}px 0px 0px 0px`,
+                threshold: 0.1
+            };
 
-            const sections = document.querySelectorAll('.month-tag');
-            
-            const onScroll = () => {
-                const stickyNavHeight = 300; 
-                let currentSectionId = null;
-                
-                sections.forEach(section => {
-                    const rect = section.getBoundingClientRect();
-                    if (rect.top <= stickyNavHeight && rect.bottom >= stickyNavHeight) {
-                        currentSectionId = section.getAttribute('id');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const navLink = document.querySelector(`.month-nav-item[href="#${id}"]`);
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
+                         document.querySelectorAll('.month-nav-item').forEach(item => item.classList.remove('active'));
+                         if(navLink) {
+                            navLink.classList.add('active');
+                            navLink.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                         }
                     }
                 });
+            }, options);
 
-                document.querySelectorAll('.month-nav-item').forEach(item => item.classList.remove('active'));
-                
-                if (currentSectionId) {
-                    const navLink = document.querySelector(`.month-nav-item[href="#${currentSectionId}"]`);
-                    if (navLink) {
-                        navLink.classList.add('active');
-                        navLink.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                    }
-                }
-            };
-            
-            window.addEventListener('scroll', onScroll, { passive: true });
+            document.querySelectorAll('.month-card').forEach(section => {
+                observer.observe(section);
+            });
         }
 
-        window.addEventListener('resize', () => {
-            calculateStickyNavHeight();
-        });
-
+        window.addEventListener('resize', calculateStickyNavHeight);
         document.addEventListener('DOMContentLoaded', initializePage);
     </script>
 </body>

@@ -8,62 +8,131 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f0f7ff; }
-        .swal2-popup { border-radius: 1rem !important; }
-        .swal-form-label { display: block; text-align: left; margin-top: 1rem; margin-bottom: 0.25rem; font-size: 0.875rem; font-weight: 500; color: #4b5563; }
-        
-        .swal-form-input {
-            width: 100%; padding: 0.75rem; border-radius: 0.5rem; 
-            background-color: #f3f4f6; border: 1px solid #d1d5db; color: #111827;
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
-        .swal-form-input:focus { 
-            outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); 
-        }
-        input.swal-form-input { cursor: text; }
-        select.swal-form-input { cursor: pointer; }
-
-        input.swal-form-input:read-only { 
-            background-color: #e5e7eb; cursor: not-allowed; 
-        }
-
-        /* Go to Top Button */
-        #goTopBtn {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 50;
-            display: none;
-            background: #2563eb;
-            color: #fff;
-            border: none;
-            border-radius: 9999px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            padding: 0.75rem 1.1rem;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.2s;
-        }
-        #goTopBtn:hover {
-            background: #1d4ed8;
-            transform: scale(1.08);
-        }
-        #goTopBtn svg {
-            display: block;
-            margin: 0 auto;
-        }
-        @media (max-width: 640px) {
-            #goTopBtn { right: 1rem; bottom: 1rem; padding: 0.6rem 0.9rem; font-size: 1.2rem; }
-        }
-
-        /* Animation for table row fade-in */
-        .fade-in-row {
-            animation: fadeInRow 0.7s ease;
-        }
-        @keyframes fadeInRow {
-            from { opacity: 0; transform: translateY(20px); }
+        /* Modern Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: calc(200px + 100%) 0; }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.8), 0 0 40px rgba(34, 197, 94, 0.4); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        .fade-in-up { animation: fadeInUp 0.6s ease-out; }
+        .fade-in-left { animation: fadeInLeft 0.6s ease-out; }
+        .fade-in-scale { animation: fadeInScale 0.5s ease-out; }
+        .hover-lift { transition: all 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .gradient-button {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .gradient-button:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+        }
+        .gradient-button:active {
+            transform: translateY(0px);
+        }
+        .action-button {
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .action-button:hover {
+            transform: scale(1.1);
+        }
+        .action-button:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.1;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .action-button:hover:before {
+            width: 50px;
+            height: 50px;
+        }
+        .shimmer-loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200px 100%;
+            animation: shimmer 2s infinite;
+        }
+        .table-row {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .table-row:hover {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.05) 0%, rgba(255, 255, 255, 0.8) 100%);
+            border-left-color: #6366f1;
+            transform: translateX(5px);
+        }
+        .loading-pulse {
+            animation: float 2s ease-in-out infinite;
+        }
+        @media (max-width: 768px) {
+            .attendee-checkbox-list {
+                max-height: 200px;
+            }
+        }
+        .swal2-container { z-index: 9999; }
+        .swal2-popup {
+            border-radius: 20px !important;
+            border: none !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
+        }
+        .swal2-confirm {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .swal2-confirm:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4) !important;
         }
     </style>
 </head>
@@ -71,12 +140,10 @@
 
     <!-- Login View -->
     <div id="login-view" class="flex items-center justify-center min-h-screen bg-gray-100">
-        <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-xl">
+        <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-xl">
             <div class="text-center">
                 <div class="flex justify-center mb-4">
-                    <div class="flex justify-center mb-4">
-                        <img src="osm.gif" alt="Logo" class="h-40 w-40 object-contain">
-                    </div>
+                    <img src="osm.gif" alt="Logo" class="h-40 w-40 object-contain">
                 </div>
                 <h1 class="text-3xl font-bold text-gray-900">ระบบข้อมูล อสม.</h1>
                 <p class="mt-2 text-gray-500">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
@@ -101,80 +168,83 @@
 
     <!-- Main App View (hidden by default) -->
     <div id="main-view" class="hidden">
-        <nav class="bg-blue-600 text-white p-4 shadow-lg flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                 <img src="osm.png" alt="Logo" class="h-16 w-16 object-contain">
-                <h1 id="facility-name-header" class="text-xl font-bold"></h1>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="text-right">
-                    <div id="user-name" class="font-semibold"></div>
-                    <div id="user-position" class="text-sm text-blue-200"></div>
+        <nav class="glass-nav text-white p-4 shadow-2xl sticky top-0 z-50">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <img src="osm.png" alt="Logo" class="h-16 w-16 object-contain">
+                    <div>
+                        <h1 id="facility-name-header" class="text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent"></h1>
+                        <div class="text-sm text-white text-opacity-80">ระบบจัดการข้อมูล</div>
+                    </div>
                 </div>
-                <button onclick="handleLogout()" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" /></svg>
-                    ออกจากระบบ
-                </button>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden md:block">
+                        <div id="user-name" class="font-semibold"></div>
+                        <div id="user-position" class="text-sm text-white text-opacity-70"></div>
+                    </div>
+                    <button onclick="handleLogout()" class="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-filter backdrop-blur-sm text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" /></svg>
+                        ออกจากระบบ
+                    </button>
+                </div>
             </div>
         </nav>
 
         <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-            <div class="bg-white p-6 rounded-xl shadow-md mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-700">จัดการข้อมูล อสม.</h2>
-                    <p class="text-gray-500">เพิ่ม แก้ไข หรือลบข้อมูล อสม. ในสังกัดของคุณ</p>
-                </div>
-                <div class="flex items-center justify-end flex-wrap gap-4">
-                     <a href="report.html" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
-                        ส่งรายงาน อสม.1
-                    </a>
-                    <a href="meetings.html" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
-                        บันทึกการประชุม
-                    </a>
-                    <button onclick="showAddModal()" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                        เพิ่มข้อมูลใหม่
-                    </button>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-md mb-8">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">ค้นหาและกรองข้อมูล</h2>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div class="md:col-span-2">
-                        <label for="search-input" class="block text-sm font-medium text-gray-600 mb-1">ค้นหาจากชื่อ หรือ บัตรประชาชน</label>
-                        <input type="text" id="search-input" placeholder="ระบุคำค้นหา..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
+            <!-- Revamped Control Panel -->
+            <div class="glass-card p-6 rounded-2xl shadow-lg mb-8 fade-in-up">
+                <div class="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div>
-                        <label for="filter-status" class="block text-sm font-medium text-gray-600 mb-1">สถานะ</label>
-                        <select id="filter-status" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="">ทั้งหมด</option>
-                            <option value="เป็น อสม." selected>เป็น อสม.</option>
-                            <option value="ลาออก">ลาออก</option>
-                            <option value="เสียชีวิต">เสียชีวิต</option>
-                        </select>
+                        <h2 class="text-2xl font-bold text-gray-800">จัดการข้อมูล อสม.</h2>
+                        <p class="text-gray-600 mt-1">เพิ่ม แก้ไข หรือลบข้อมูล อสม. ในสังกัดของคุณ</p>
                     </div>
-                    <div class="flex gap-2">
-                        <button id="search-button" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
-                            ค้นหา
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <a href="report.html" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">ส่งรายงาน อสม.1</a>
+                        <a href="meetings.html" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">บันทึกการประชุม</a>
+                        <button onclick="showAddModal()" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            เพิ่มข้อมูลใหม่
                         </button>
-                        <button id="clear-search-button" class="w-full flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">ล้าง</button>
+                    </div>
+                </div>
+                <div class="border-t border-gray-200 mt-6 pt-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div class="md:col-span-2">
+                            <label for="search-input" class="block text-sm font-medium text-gray-600 mb-1">ค้นหาจากชื่อ หรือ บัตรประชาชน</label>
+                            <input type="text" id="search-input" placeholder="ระบุคำค้นหา..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="filter-status" class="block text-sm font-medium text-gray-600 mb-1">สถานะ</label>
+                            <select id="filter-status" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">ทั้งหมด</option>
+                                <option value="เป็น อสม." selected>เป็น อสม.</option>
+                                <option value="ลาออก">ลาออก</option>
+                                <option value="เสียชีวิต">เสียชีวิต</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="search-button" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                                ค้นหา
+                            </button>
+                            <button id="clear-search-button" class="w-full flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">ล้าง</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white shadow-xl rounded-xl overflow-hidden">
+            <div class="glass-card shadow-xl rounded-2xl overflow-hidden fade-in-up" style="animation-delay: 0.2s;">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left text-gray-600">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 bg-opacity-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 w-16 text-center">ลำดับ</th>
-                                <th scope="col" class="px-6 py-3">ชื่อ-นามสกุล</th>
-                                <th scope="col" class="px-6 py-3">หมู่ที่</th>
-                                <th scope="col" class="px-6 py-3">ตำบล</th>
-                                <th scope="col" class="px-6 py-3">เบอร์โทรศัพท์</th>
-                                <th scope="col" class="px-6 py-3">สถานะ</th>
-                                <th scope="col" class="px-6 py-3 text-center">จัดการ</th>
+                                <th scope="col" class="px-6 py-4 w-16 text-center">ลำดับ</th>
+                                <th scope="col" class="px-6 py-4">ชื่อ-นามสกุล</th>
+                                <th scope="col" class="px-6 py-4">หมู่ที่</th>
+                                <th scope="col" class="px-6 py-4">ตำบล</th>
+                                <th scope="col" class="px-6 py-4">เบอร์โทรศัพท์</th>
+                                <th scope="col" class="px-6 py-4">สถานะ</th>
+                                <th scope="col" class="px-6 py-4 text-center">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="vhv-table-body"></tbody>
@@ -183,6 +253,10 @@
             </div>
         </div>
     </div>
+    
+    <button id="goTopBtn" title="Go to top" aria-label="Go to top">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+    </button>
 
     <script>
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuMilkxeAl3AcRXdcOr4VZvlB6z5tuqKGePrD8qqmMdfNjHuk1-cT8Pq7caw8SNFTQ/exec';
@@ -313,7 +387,7 @@
             }
             data.forEach((vhv, index) => {
                 const row = document.createElement('tr');
-                row.className = 'bg-white border-b hover:bg-gray-50 transition-colors duration-200 fade-in-row';
+                row.className = 'table-row';
 
                 const status = vhv.data.status || 'เป็น อสม.';
                 const statusDate = vhv.data.statusDate || '';
@@ -329,8 +403,8 @@
                     <td class="px-6 py-4"><span class="px-2 py-1 font-semibold leading-tight rounded-full ${statusColor}">${statusText}</span></td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2">
-                            <button onclick='showEditModal(${vhv.rowIndex})' class="p-2 rounded-full text-yellow-500 hover:bg-yellow-100 hover:text-yellow-700 transition-colors" title="แก้ไข"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
-                            <button onclick='confirmDelete(${vhv.rowIndex})' class="p-2 rounded-full text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
+                            <button onclick='showEditModal(${vhv.rowIndex})' class="p-2 rounded-full text-yellow-500 hover:bg-yellow-100" title="แก้ไข"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                            <button onclick='confirmDelete(${vhv.rowIndex})' class="p-2 rounded-full text-red-500 hover:bg-red-100" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
                         </div>
                     </td>
                 `;
@@ -561,6 +635,19 @@
             }
         });
 
+        // Go to Top Button logic
+        const goTopBtn = document.getElementById('goTopBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 200) {
+                goTopBtn.style.display = 'block';
+            } else {
+                goTopBtn.style.display = 'none';
+            }
+        });
+        goTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
         // Initial Load
         document.addEventListener('DOMContentLoaded', () => {
             const storedUser = sessionStorage.getItem('vhvUser');
@@ -577,23 +664,4 @@
         });
     </script>
 </body>
-
-    <!-- Go to Top Button -->
-    <button id="goTopBtn" title="Go to top" aria-label="Go to top">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
-    </button>
-    <script>
-    // Go to Top Button logic
-    const goTopBtn = document.getElementById('goTopBtn');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 200) {
-            goTopBtn.style.display = 'block';
-        } else {
-            goTopBtn.style.display = 'none';
-        }
-    });
-    goTopBtn.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-    </script>
 </html>
