@@ -1,314 +1,635 @@
-<!doctype html>
-<html lang="th" class="h-full touch-manipulation">
+<!DOCTYPE html>
+<html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#16a34a" />
-  <title>อสม. – LIFF (GitHub Pages + Action API)</title>
-  <link rel="preconnect" href="https://static.line-scdn.net" />
-  <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: { brand: { DEFAULT: '#16a34a', 600: '#16a34a' }},
-          boxShadow: { soft: '0 6px 24px rgba(0,0,0,.07)' }
-        }
-      }
-    };
-  </script>
-  <style>
-    :root{ --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
-    .safe-top{ padding-top: max(.5rem, var(--safe-top)); }
-    .safe-bottom{ padding-bottom: max(.75rem, var(--safe-bottom)); }
-    .line-clamp-1{ display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
-    .fade-in{ animation: fade-in .2s ease both; }
-    @keyframes fade-in{ from{ opacity:0; transform: translateY(2px) } to{ opacity:1; transform:none } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการข้อมูล อสม.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
 </head>
-<body class="h-full bg-gray-50 text-gray-900">
-  <!-- Header -->
-  <header class="safe-top sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
-    <div class="max-w-md mx-auto flex items-center gap-3 p-3">
-      <div class="w-9 h-9 rounded-xl grid place-items-center bg-emerald-100 text-emerald-700">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 21q-1.25 0-2.125-.875T2 18q0-3.35 2.325-5.675Q6.65 10 10 10h6q.825 0 1.413.587T18 12v2q0 2.9-2.05 4.95T11 21H5Zm14-9q-1.65 0-2.825-1.175T15 8q0-1.65 1.175-2.825T19 4q1.65 0 2.825 1.175T23 8q0 1.65-1.175 2.825T19 12Z"/></svg>
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="text-base font-semibold leading-5 line-clamp-1">อสม. – ระบบ LIFF</div>
-        <div class="text-xs text-gray-500">GitHub Pages + Apps Script (action API)</div>
-      </div>
-      <button id="btnRefresh" class="text-sm px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300">รีเฟรช</button>
-    </div>
-  </header>
+<body class="text-gray-800">
 
-  <!-- Main -->
-  <main class="max-w-md mx-auto p-4 pb-32">
-    <!-- Status / Consent -->
-    <div id="status" class="mt-1 hidden px-3 py-2 rounded-xl text-sm"></div>
-    <div class="text-xs text-gray-600 bg-white border border-gray-200 rounded-xl p-3 shadow-soft mt-3">
-      ระบบจะใช้ข้อมูล LINE ของคุณ (userId/ชื่อ/รูป) เพื่อยืนยันตัวตนและแสดงข้อมูลส่วนตัว
-    </div>
-
-    <!-- Enroll -->
-    <section id="enrollCard" class="mt-4 bg-white rounded-2xl shadow-soft border border-gray-100">
-      <div class="p-4">
-        <div class="font-semibold mb-1">ยืนยันตัวตนใน LINE (บันทึก userId)</div>
-        <p class="text-xs text-gray-500 mb-3">กดปุ่มเพื่อบันทึก <span class="font-medium">LINE userId</span> ของคุณลงระบบ (ตาราง LiffEnroll)</p>
-        <button id="btnEnroll" class="w-full py-3 rounded-xl bg-emerald-600 text-white font-medium active:scale-[.99]">ยืนยันตัวตนใน LINE</button>
-        <div id="enrollMsg" class="text-xs text-gray-600 mt-2"></div>
-      </div>
-    </section>
-
-    <!-- Profile -->
-    <section id="profileCard" class="hidden mt-4 bg-white rounded-2xl shadow-soft border border-gray-100">
-      <div class="p-4 flex items-center gap-3">
-        <img id="pic" class="w-14 h-14 rounded-2xl object-cover bg-gray-100" alt="profile" />
-        <div class="min-w-0">
-          <div id="displayName" class="font-semibold leading-5 line-clamp-1">—</div>
-          <div id="cid" class="text-xs text-gray-500">CID: —</div>
-        </div>
-      </div>
-      <div class="px-4 pb-4 grid grid-cols-2 gap-3 text-sm">
-        <div class="p-3 rounded-xl bg-gray-50">
-          <div class="text-gray-500 text-xs">ชื่อ-สกุล</div>
-          <div id="fullname" class="font-medium break-words">—</div>
-        </div>
-        <div class="p-3 rounded-xl bg-gray-50">
-          <div class="text-gray-500 text-xs">หมู่บ้าน</div>
-          <div id="village" class="font-medium">—</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Link (self-link) -->
-    <section id="linkForm" class="hidden mt-4 bg-white rounded-2xl shadow-soft border border-gray-100">
-      <div class="p-4">
-        <div class="font-semibold mb-1">ยืนยันตัวตน (CID + วันเกิด)</div>
-        <p class="text-xs text-gray-500 mb-3">กรณีระบบยังไม่ผูกอัตโนมัติ ให้ยืนยันตัวตนด้วยเลขบัตรประชาชนและวันเกิด</p>
-        <div class="space-y-3">
-          <div>
-            <label class="block text-xs text-gray-600">เลขบัตรประชาชน (13 หลัก)</label>
-            <input id="f_cid" inputmode="numeric" maxlength="13"
-                   class="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                   placeholder="เช่น 1169800190675" />
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600">วันเกิด (YYYY-MM-DD)</label>
-            <input id="f_dob"
-                   class="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                   placeholder="เช่น 1980-06-21" />
-          </div>
-          <button id="btnLink" class="w-full py-3 rounded-xl bg-emerald-600 text-white font-medium active:scale-[.99]">ผูกบัญชี</button>
-          <div id="linkMsg" class="text-xs text-gray-600"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Meetings -->
-    <section id="meetings" class="hidden mt-5">
-      <div class="mb-2 text-sm font-semibold">การประชุมที่เปิดอยู่</div>
-      <div id="meetingList" class="grid gap-3"></div>
-    </section>
-  </main>
-
-  <!-- Bottom Bar -->
-  <nav class="safe-bottom fixed bottom-0 inset-x-0 z-40 bg-white/90 backdrop-blur border-t border-gray-200">
-    <div class="max-w-md mx-auto grid grid-cols-3">
-      <button id="tabEnroll" class="py-3 flex flex-col items-center gap-1 text-emerald-700">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12q-1.65 0-2.825-1.175T8 8q0-1.65 1.175-2.825T12 4q1.65 0 2.825 1.175T16 8q0 1.65-1.175 2.825T12 12ZM6 20q-1.25 0-2.125-.875T3 17q0-1.25.875-2.125T6 14h12q1.25 0 2.125.875T21 17q0 1.25-.875 2.125T18 20Z"/></svg>
-        <span class="text-xs font-medium">ยืนยันตัวตน</span>
-      </button>
-      <button id="tabProfile" class="py-3 flex flex-col items-center gap-1 text-gray-500">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12q-1.65 0-2.825-1.175T8 8q0-1.65 1.175-2.825T12 4q1.65 0 2.825 1.175T16 8q0 1.65-1.175 2.825T12 12Zm-8 8v-2.2q0-.85.438-1.562T5.6 14.9q1.55-.9 3.188-1.4T12 13t3.212.5q1.638.5 3.188 1.4q.725.425 1.163 1.138T20 17.8V20H4Z"/></svg>
-        <span class="text-xs font-medium">โปรไฟล์</span>
-      </button>
-      <button id="tabMeet" class="py-3 flex flex-col items-center gap-1 text-gray-500">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4H5q-.825 0-1.412.587T3 6v12q0 .825.588 1.413T5 20h14q.825 0 1.413-.587T21 18V6q0-.825-.587-1.413T19 4ZM8 11H6V9h2v2Zm0 4H6v-2h2v2Zm5-4h-3V9h3v2Zm5 0h-3V9h3v2Zm-5 4h-3v-2h3v2Zm5 0h-3v-2h3v2Z"/></svg>
-        <span class="text-xs font-medium">ประชุม</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Toast -->
-  <div id="toast" class="pointer-events-none fixed inset-x-0 bottom-24 flex justify-center"></div>
-
-  <script>
-    // ===== CONFIG (ใส่ค่าจริงก่อนใช้งาน) =====
-    const LIFF_ID = '2008189191-jnqX2z8B'; // เช่น 2008189191-jnqX2z8B
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzw-aa6bHsQqZYxCBfKfFUBKrl5gEcDlVCPqcvdUHDGqejdai2_Y4U908AXLk_SbrnW/exec'; // URL /exec ของคุณ
-
-    // ===== Utilities (เลี่ยง preflight/CORS) =====
-    const $ = (id)=> document.getElementById(id);
-    const show = (id)=> $(id).classList.remove('hidden');
-    const hide = (id)=> $(id).classList.add('hidden');
-    const setStatus=(msg,type='info')=>{
-      const el=$('status');
-      el.textContent = msg || '';
-      el.className='mt-1 px-3 py-2 rounded-xl text-sm '+(
-        type==='ok'  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-        type==='err' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                       'bg-gray-50 text-gray-700 border border-gray-200'
-      );
-      show('status');
-    };
-    const toast=(msg)=>{
-      const t=$('toast');
-      const node=document.createElement('div');
-      node.className='mx-3 mb-3 bg-gray-900 text-white text-sm px-3 py-2 rounded-xl shadow-xl fade-in';
-      node.textContent=msg; t.appendChild(node); setTimeout(()=>node.remove(),2400);
-    };
-
-    async function apiGet(action, params={}){
-      const u = new URL(APPS_SCRIPT_URL);
-      u.searchParams.set('action', action);
-      Object.entries(params).forEach(([k,v])=> u.searchParams.set(k, v));
-      // สำคัญ: ไม่ใส่ headers แปลก ๆ
-      const res = await fetch(u.toString(), { method: 'GET' });
-      if(!res.ok) throw new Error('Network');
-      return res.json();
-    }
-    async function apiPost(action, body={}){
-      // สำคัญ: ใช้ text/plain เพื่อลดโอกาส preflight
-      const res = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, ...body })
-      });
-      if(!res.ok) throw new Error('Network');
-      return res.json();
-    }
-
-    // ===== Tabs =====
-    function setTab(tab){
-      const isEnroll  = tab==='enroll';
-      const isProfile = tab==='profile';
-      const isMeet    = tab==='meet';
-      $('tabEnroll').classList.toggle('text-emerald-700', isEnroll);
-      $('tabEnroll').classList.toggle('text-gray-500', !isEnroll);
-      $('tabProfile').classList.toggle('text-emerald-700', isProfile);
-      $('tabProfile').classList.toggle('text-gray-500', !isProfile);
-      $('tabMeet').classList.toggle('text-emerald-700', isMeet);
-      $('tabMeet').classList.toggle('text-gray-500', !isMeet);
-      if(isEnroll){ show('enrollCard'); hide('profileCard'); hide('linkForm'); hide('meetings'); }
-      if(isProfile){ show('profileCard'); hide('enrollCard'); hide('meetings'); }
-      if(isMeet){ show('meetings'); hide('enrollCard'); hide('profileCard'); }
-    }
-
-    // ===== App State =====
-    let gUserId = ''; let gProfile = null;
-
-    async function bootstrap(){
-      setStatus('กำลังเริ่มระบบ…');
-      try{
-        await liff.init({ liffId: LIFF_ID });
-        if(!liff.isLoggedIn()){ liff.login({ redirectUri: location.href }); return; }
-
-        const prof = await liff.getProfile();
-        gProfile = prof; gUserId = prof.userId;
-
-        // INIT → ลองแมปจาก UsersMap (pre-load) อัตโนมัติ
-        const init = await apiGet('init', { userId: gUserId });
-        if(!init.ok){ setStatus('เริ่มต้นไม่สำเร็จ','err'); setTab('enroll'); return; }
-
-        if(init.mapped){
-          setStatus('ผูกบัญชีแล้ว','ok');
-          renderProfile(init.volBasic, prof);
-          await loadMeetings();
-          hide('enrollCard');
-          setTab('profile');
-        } else {
-          setStatus('ยังไม่ได้ผูกบัญชี','info');
-          show('linkForm');
-          setTab('enroll');
-        }
-      }catch(err){
-        console.error(err);
-        setStatus('เกิดข้อผิดพลาดในการเริ่มต้น','err');
-        setTab('enroll');
-      }
-    }
-
-    function renderProfile(volBasic, prof){
-      $('profileCard').classList.remove('hidden');
-      $('displayName').textContent = prof?.displayName || '';
-      $('pic').src = prof?.pictureUrl || '';
-      $('cid').textContent = 'CID: ' + (volBasic?.cid || '—');
-      $('fullname').textContent = volBasic?.fullname || '—';
-      $('village').textContent = volBasic?.village || '—';
-    }
-
-    async function loadMeetings(){
-      try{
-        const m = await apiGet('meetings');
-        if(m.ok){
-          const list = (m.meetings||[]).map(x=>{
-            return `<div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-soft">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <div class="font-medium text-[15px] leading-5">${x.title||'-'}</div>
-                  <div class="text-xs text-gray-500">${x.date||''} ${x.time||''} @ ${x.location||''}</div>
+    <!-- Login View -->
+    <div id="login-view" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-8 space-y-8 glass-card rounded-3xl shadow-2xl fade-in-up">
+            <div class="text-center">
+                <div class="flex justify-center mb-4">
+                    <img src="osm.gif" alt="Logo" class="h-40 w-40 object-contain loading-pulse">
                 </div>
-                <button data-id="${x.meeting_id}" class="btnCheckin shrink-0 px-3 py-2 rounded-xl bg-emerald-600 text-white text-sm active:scale-[.99]">เช็คชื่อ</button>
-              </div>
-            </div>`
-          }).join('');
-          $('meetings').classList.remove('hidden');
-          $('meetingList').innerHTML = list || '<div class="text-xs text-gray-500">ไม่มีการประชุมที่เปิดอยู่</div>';
-          document.querySelectorAll('.btnCheckin').forEach(btn=>{
-            btn.addEventListener('click', async()=>{
-              try{
-                const r = await apiPost('checkin', { userId: gUserId, meeting_id: btn.dataset.id });
-                if(r.ok){ toast('เช็คชื่อเรียบร้อย'); } else { toast('ผิดพลาด: '+(r.error||'')); }
-              }catch{ toast('เครือข่ายผิดพลาด'); }
-            });
-          });
-        }
-      }catch(err){ console.error(err); }
-    }
+                <h1 class="text-3xl font-bold text-gray-900">ระบบข้อมูล อสม.</h1>
+                <p class="mt-2 text-gray-500">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="idCardLogin" class="text-sm font-bold text-gray-600 block">เลขบัตรประชาชน</label>
+                    <input type="text" id="idCardLogin" class="search-input w-full p-3 mt-1 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="xxxxxxxxxxxxx" required>
+                </div>
+                <div>
+                    <label for="passwordLogin" class="text-sm font-bold text-gray-600 block">รหัสผ่าน (เลขสถานบริการ)</label>
+                    <input type="password" id="passwordLogin" class="search-input w-full p-3 mt-1 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 font-bold text-white rounded-lg gradient-button">
+                    <svg id="login-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
+                    <img id="login-gif" src="osm.gif" alt="Loading..." class="h-5 w-5 hidden">
+                    <span id="login-button-text">เข้าสู่ระบบ</span>
+                </button>
+            </form>
+        </div>
+    </div>
 
-    // ===== Events =====
-    $('btnEnroll').addEventListener('click', async ()=>{
-      try{
-        const body = {
-          userId: gUserId,
-          displayName: gProfile?.displayName || '',
-          pictureUrl: gProfile?.pictureUrl || '',
-          os: liff.getOS(),
-          lang: navigator.language || '',
-          device: navigator.userAgent || '',
-          state: ''
+    <!-- Main App View (hidden by default) -->
+    <div id="main-view" class="hidden">
+        <nav class="glass-nav text-white p-4 shadow-2xl sticky top-0 z-50">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <img src="osm.png" alt="Logo" class="h-16 w-16 object-contain">
+                    <div>
+                        <h1 id="facility-name-header" class="text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent"></h1>
+                        <div class="text-sm text-white text-opacity-80">ระบบจัดการข้อมูล</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden md:block">
+                        <div id="user-name" class="font-semibold"></div>
+                        <div id="user-position" class="text-sm text-white text-opacity-70"></div>
+                    </div>
+                    <button onclick="handleLogout()" class="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-filter backdrop-blur-sm text-white font-semibold py-2 px-4 rounded-xl shadow-lg transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" /></svg>
+                        ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+            <!-- Revamped Control Panel -->
+            <div class="glass-card p-6 rounded-2xl shadow-lg mb-8 fade-in-up">
+                <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">จัดการข้อมูล อสม.</h2>
+                        <p class="text-gray-600 mt-1">เพิ่ม แก้ไข หรือลบข้อมูล อสม. ในสังกัดของคุณ</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <a href="report.html" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">ส่งรายงาน อสม.1</a>
+                        <a href="meetings.html" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">บันทึกการประชุม</a>
+                        <button onclick="showAddModal()" class="flex items-center justify-center gap-2 w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            เพิ่มข้อมูลใหม่
+                        </button>
+                    </div>
+                </div>
+                <div class="border-t border-gray-200 mt-6 pt-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div class="md:col-span-2">
+                            <label for="search-input" class="block text-sm font-medium text-gray-600 mb-1">ค้นหาจากชื่อ หรือ บัตรประชาชน</label>
+                            <input type="text" id="search-input" placeholder="ระบุคำค้นหา..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="filter-status" class="block text-sm font-medium text-gray-600 mb-1">สถานะ</label>
+                            <select id="filter-status" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">ทั้งหมด</option>
+                                <option value="เป็น อสม." selected>เป็น อสม.</option>
+                                <option value="ลาออก">ลาออก</option>
+                                <option value="เสียชีวิต">เสียชีวิต</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="search-button" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                                ค้นหา
+                            </button>
+                            <button id="clear-search-button" class="w-full flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">ล้าง</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card shadow-xl rounded-2xl overflow-hidden fade-in-up" style="animation-delay: 0.2s;">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 bg-opacity-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 w-16 text-center">ลำดับ</th>
+                                <th scope="col" class="px-6 py-4">ชื่อ-นามสกุล</th>
+                                <th scope="col" class="px-6 py-4">หมู่ที่</th>
+                                <th scope="col" class="px-6 py-4">ตำบล</th>
+                                <th scope="col" class="px-6 py-4">เบอร์โทรศัพท์</th>
+                                <th scope="col" class="px-6 py-4">สถานะ</th>
+                                <th scope="col" class="px-6 py-4 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vhv-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button id="goTopBtn" title="Go to top" aria-label="Go to top">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+    </button>
+
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuMilkxeAl3AcRXdcOr4VZvlB6z5tuqKGePrD8qqmMdfNjHuk1-cT8Pq7caw8SNFTQ/exec';
+        const tableBody = document.getElementById('vhv-table-body');
+        
+        let appState = {
+            user: null,
+            vhvData: []
         };
-        const r = await apiPost('enroll', body);
-        if(r.ok){ $('enrollMsg').textContent = 'บันทึกสำเร็จ (enroll_id: '+r.enroll_id+')'; toast('บันทึก userId แล้ว'); }
-        else { $('enrollMsg').textContent = 'ผิดพลาด: ' + (r.error||'enroll_failed'); }
-      }catch(err){ $('enrollMsg').textContent = 'เครือข่ายผิดพลาด'; }
-    });
 
-    $('btnLink').addEventListener('click', async ()=>{
-      const cid = $('f_cid').value.trim();
-      const dob = $('f_dob').value.trim();
-      if(cid.length!==13){ toast('กรอก CID 13 หลัก'); return; }
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(dob)){ toast('รูปแบบวันเกิดไม่ถูกต้อง'); return; }
-      try{
-        const r = await apiPost('link', { userId: gUserId, method:'dob', cid, dob, displayName: gProfile?.displayName, pictureUrl: gProfile?.pictureUrl||'' });
-        if(r.ok){
-          $('linkMsg').textContent = 'ผูกบัญชีสำเร็จ! กำลังโหลดข้อมูล…';
-          const init = await apiGet('init', { userId: gUserId });
-          if(init?.mapped){ renderProfile(init.volBasic, gProfile); hide('linkForm'); await loadMeetings(); setStatus('ผูกบัญชีแล้ว','ok'); setTab('profile'); }
-        } else {
-          $('linkMsg').textContent = 'ผิดพลาด: ' + (r.error||'link_failed');
+        // --- Date Helper Functions ---
+        const thaiMonths = [
+            { value: '01', name: 'มกราคม' }, { value: '02', name: 'กุมภาพันธ์' }, { value: '03', name: 'มีนาคม' },
+            { value: '04', name: 'เมษายน' }, { value: '05', name: 'พฤษภาคม' }, { value: '06', name: 'มิถุนายน' },
+            { value: '07', name: 'กรกฎาคม' }, { value: '08', name: 'สิงหาคม' }, { value: '09', name: 'กันยายน' },
+            { value: '10', name: 'ตุลาคม' }, { value: '11', name: 'พฤศจิกายน' }, { value: '12', name: 'ธันวาคม' }
+        ];
+        const getDayOptions = () => Array.from({length: 31}, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join('');
+        const getMonthOptions = () => thaiMonths.map(m => `<option value="${m.value}">${m.name}</option>`).join('');
+        const getYearOptions = (startOffset = 100, endOffset = 0) => {
+            const currentBuddhistYear = new Date().getFullYear() + 543;
+            let options = '';
+            for (let i = currentBuddhistYear - endOffset; i >= currentBuddhistYear - startOffset; i--) {
+                options += `<option value="${i}">${i}</option>`;
+            }
+            return options;
+        };
+
+        // --- Auth Functions ---
+        async function handleLogin(event) {
+            event.preventDefault();
+            const idCard = document.getElementById('idCardLogin').value;
+            const password = document.getElementById('passwordLogin').value;
+            
+            if (!idCard || !password) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            document.getElementById('login-icon').classList.add('hidden');
+            document.getElementById('login-gif').classList.remove('hidden');
+            document.getElementById('login-button-text').textContent = 'กำลังตรวจสอบ...';
+            
+            const response = await handleFormSubmit({ action: 'login', idCard, password });
+
+            document.getElementById('login-icon').classList.remove('hidden');
+            document.getElementById('login-gif').classList.add('hidden');
+            document.getElementById('login-button-text').textContent = 'เข้าสู่ระบบ';
+
+            if (response && response.status === 'success') {
+                appState.user = response.user;
+                sessionStorage.setItem('vhvUser', JSON.stringify(response.user));
+                
+                if (response.user.facilityId === '00126') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showMainView();
+                }
+            } else {
+                Swal.fire('เข้าสู่ระบบไม่สำเร็จ', response.message || 'เลขบัตรประชาชนหรือรหัสผ่านไม่ถูกต้อง', 'error');
+            }
         }
-      }catch(err){ $('linkMsg').textContent = 'เครือข่ายผิดพลาด'; }
-    });
 
-    $('btnRefresh').addEventListener('click', ()=> bootstrap());
-    $('tabEnroll').addEventListener('click', ()=> setTab('enroll'));
-    $('tabProfile').addEventListener('click', ()=> setTab('profile'));
-    $('tabMeet').addEventListener('click', ()=> setTab('meet'));
+        function handleLogout() {
+            appState.user = null;
+            sessionStorage.removeItem('vhvUser');
+            showLoginView();
+        }
 
-    // ===== Start =====
-    bootstrap();
-  </script>
+        function showLoginView() {
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('main-view').classList.add('hidden');
+            document.getElementById('login-form').reset();
+        }
+
+        function showMainView() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('main-view').classList.remove('hidden');
+            
+            document.getElementById('facility-name-header').textContent = appState.user.facilityName;
+            document.getElementById('user-name').textContent = appState.user.fullName;
+            document.getElementById('user-position').textContent = appState.user.position;
+
+            fetchData();
+        }
+        
+        // --- Main Data Fetch and Render ---
+        async function fetchData() {
+            if (!appState.user) return;
+            showLoadingSpinner();
+            try {
+                const url = new URL(APPS_SCRIPT_URL);
+                url.searchParams.append('action', 'getVhvData');
+                url.searchParams.append('facilityId', appState.user.facilityId);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                appState.vhvData = await response.json();
+                filterAndRenderTable();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}</td></tr>`;
+            }
+        }
+
+        function filterAndRenderTable() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+
+            const filteredData = appState.vhvData.filter(vhv => {
+                const fullName = (vhv.data.fullName || '').toLowerCase();
+                const idCard = (vhv.data.idCard || '').toString();
+                const status = vhv.data.status || '';
+
+                const matchesSearch = searchTerm === '' || fullName.includes(searchTerm) || idCard.includes(searchTerm);
+                const matchesStatus = statusFilter === '' || status === statusFilter;
+
+                return matchesSearch && matchesStatus;
+            });
+            renderTable(filteredData);
+        }
+
+        function renderTable(data) {
+            data.sort((a, b) => (parseInt(a.data.moo, 10) || 0) - (parseInt(b.data.moo, 10) || 0));
+            tableBody.innerHTML = '';
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</td></tr>`;
+                return;
+            }
+            data.forEach((vhv, index) => {
+                const row = document.createElement('tr');
+                row.className = 'table-row';
+
+                const status = vhv.data.status || 'เป็น อสม.';
+                const statusDate = vhv.data.statusDate || '';
+                const statusText = (status !== 'เป็น อสม.' && statusDate) ? `${status} (${statusDate})` : status;
+                const statusColor = status === 'เป็น อสม.' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-center text-gray-500">${index + 1}</td>
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${vhv.data.fullName || '-'}</td>
+                    <td class="px-6 py-4">${vhv.data.moo || '-'}</td>
+                    <td class="px-6 py-4">${vhv.data.subDistrict || '-'}</td>
+                    <td class="px-6 py-4">${vhv.data.phone || '-'}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 font-semibold leading-tight rounded-full ${statusColor}">${statusText}</span></td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick='showEditModal(${vhv.rowIndex})' class="p-2 rounded-full text-yellow-500 hover:bg-yellow-100" title="แก้ไข"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                            <button onclick='confirmDelete(${vhv.rowIndex})' class="p-2 rounded-full text-red-500 hover:bg-red-100" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function showLoadingSpinner() {
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8"><div class="flex justify-center items-center gap-4 text-gray-500"><img src="osm.gif" alt="Loading..." class="w-16 h-16"><span class="text-lg">กำลังโหลดข้อมูล...</span></div></td></tr>`;
+        }
+        
+        function toggleStatusDate(status) {
+            const wrapper = document.getElementById('status-date-wrapper');
+            if (wrapper) {
+                wrapper.style.display = (status === 'ลาออก' || status === 'เสียชีวิต') ? 'block' : 'none';
+            }
+        }
+
+        // --- Modal and Form Logic ---
+        function getFormHTML() {
+            const inputClass = 'mt-1 block w-full rounded-xl border-2 border-gray-200 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50';
+            return `
+                <div id="vhv-form" class="space-y-6 text-left max-w-4xl mx-auto">
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">1. หมายเลขบัตรประชาชน</label>
+                        <input id="idCard" type="text" class="${inputClass}" placeholder="กรอก 13 หลัก" maxlength="13">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">2. ชื่อ-นามสกุล</label>
+                        <input id="fullName" type="text" class="${inputClass}" placeholder="เช่น สมหญิง ใจดี">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">3. วันเกิด</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <select id="dob_day" class="${inputClass}"><option value="">วัน</option>${getDayOptions()}</select>
+                            <select id="dob_month" class="${inputClass}"><option value="">เดือน</option>${getMonthOptions()}</select>
+                            <select id="dob_year" class="${inputClass}"><option value="">ปี (พ.ศ.)</option>${getYearOptions(100, 18)}</select>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">4. ที่อยู่</label>
+                        <input id="address" type="text" class="${inputClass}" placeholder="บ้านเลขที่, ถนน">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">5. หมู่ที่</label>
+                            <input id="moo" type="text" class="${inputClass}" placeholder="เช่น 1">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">6. ตำบล</label>
+                            <input id="subDistrict" type="text" class="${inputClass}" placeholder="เช่น โคกเจริญ">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">7. อำเภอ</label>
+                            <input id="district" type="text" class="${inputClass}" placeholder="เช่น โคกเจริญ">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">8. จังหวัด</label>
+                            <input id="province" type="text" class="${inputClass}" placeholder="เช่น ลพบุรี">
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">9. สถานบริการฯ</label>
+                        <input id="healthFacility" type="text" class="${inputClass} bg-gray-100" readonly>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">10. วันที่ขึ้นทะเบียน</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <select id="reg_day" class="${inputClass}"><option value="">วัน</option>${getDayOptions()}</select>
+                            <select id="reg_month" class="${inputClass}"><option value="">เดือน</option>${getMonthOptions()}</select>
+                            <select id="reg_year" class="${inputClass}"><option value="">ปี (พ.ศ.)</option>${getYearOptions(60, 0)}</select>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">11. เบอร์โทรศัพท์</label>
+                        <input id="phone" type="text" class="${inputClass}" placeholder="กรอกเบอร์โทรศัพท์" maxlength="10">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">12. บัญชีปฎิบัติงาน</label>
+                        <input id="workAccount" type="text" class="${inputClass}" placeholder="เช่น บัญชีธนาคาร/หมายเลขพร้อมเพย์">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">13. สถานะ อสม.</label>
+                        <select id="status" class="${inputClass}" onchange="toggleStatusDate(this.value)">
+                            <option value="เป็น อสม.">เป็น อสม.</option>
+                            <option value="ลาออก">ลาออก</option>
+                            <option value="เสียชีวิต">เสียชีวิต</option>
+                        </select>
+                    </div>
+                    <div id="status-date-wrapper" class="space-y-2" style="display: none;">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">วันที่สถานะ (ลาออก/เสียชีวิต)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <select id="status_day" class="${inputClass}"><option value="">วัน</option>${getDayOptions()}</select>
+                            <select id="status_month" class="${inputClass}"><option value="">เดือน</option>${getMonthOptions()}</select>
+                            <select id="status_year" class="${inputClass}"><option value="">ปี (พ.ศ.)</option>${getYearOptions(10, 0)}</select>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function populateForm(data = {}) {
+            document.getElementById('idCard').value = data.idCard || '';
+            document.getElementById('fullName').value = data.fullName || '';
+            document.getElementById('address').value = data.address || '';
+            document.getElementById('moo').value = data.moo || '';
+            document.getElementById('subDistrict').value = data.subDistrict || '';
+            document.getElementById('district').value = data.district || '';
+            document.getElementById('province').value = data.province || '';
+            document.getElementById('healthFacility').value = appState.user.facilityName;
+            document.getElementById('phone').value = data.phone || '';
+            document.getElementById('workAccount').value = data.workAccount || '';
+            document.getElementById('status').value = data.status || 'เป็น อสม.';
+
+            const dobParts = (String(data.dob || '')).split('/');
+            if (dobParts.length === 3) {
+                document.getElementById('dob_day').value = String(dobParts[0]).padStart(2, '0');
+                document.getElementById('dob_month').value = String(dobParts[1]).padStart(2, '0');
+                document.getElementById('dob_year').value = dobParts[2];
+            }
+
+            const regParts = (String(data.regDate || '')).split('/');
+            if (regParts.length === 3) {
+                document.getElementById('reg_day').value = String(regParts[0]).padStart(2, '0');
+                document.getElementById('reg_month').value = String(regParts[1]).padStart(2, '0');
+                document.getElementById('reg_year').value = regParts[2];
+            }
+            
+            const statusDateParts = (String(data.statusDate || '')).split('/');
+            if (statusDateParts.length === 3) {
+                document.getElementById('status_day').value = String(statusDateParts[0]).padStart(2, '0');
+                document.getElementById('status_month').value = String(statusDateParts[1]).padStart(2, '0');
+                document.getElementById('status_year').value = statusDateParts[2];
+            }
+        }
+
+        function collectFormData() {
+            const status = document.getElementById('status').value;
+            const dob = [document.getElementById('dob_day').value, document.getElementById('dob_month').value, document.getElementById('dob_year').value].every(v => v) ? [document.getElementById('dob_day').value, document.getElementById('dob_month').value, document.getElementById('dob_year').value].join('/') : '';
+            const regDate = [document.getElementById('reg_day').value, document.getElementById('reg_month').value, document.getElementById('reg_year').value].every(v => v) ? [document.getElementById('reg_day').value, document.getElementById('reg_month').value, document.getElementById('reg_year').value].join('/') : '';
+            const statusDate = (status === 'ลาออก' || status === 'เสียชีวิต') && [document.getElementById('status_day').value, document.getElementById('status_month').value, document.getElementById('status_year').value].every(v => v) ? [document.getElementById('status_day').value, document.getElementById('status_month').value, document.getElementById('status_year').value].join('/') : '';
+
+            return {
+                idCard: document.getElementById('idCard').value, fullName: document.getElementById('fullName').value, dob,
+                address: document.getElementById('address').value, moo: document.getElementById('moo').value,
+                subDistrict: document.getElementById('subDistrict').value, district: document.getElementById('district').value,
+                province: document.getElementById('province').value, 
+                facilityId: appState.user.facilityId,
+                regDate, phone: document.getElementById('phone').value, workAccount: document.getElementById('workAccount').value,
+                status, statusDate
+            };
+        }
+
+        async function handleFormSubmit(payload) {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST', body: JSON.stringify(payload),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                });
+                if (!response.ok) throw new Error((await response.json()).message || response.statusText);
+                return await response.json();
+            } catch (error) {
+                Swal.showValidationMessage(`Request failed: ${error}`);
+                return null;
+            }
+        }
+
+        // --- CRUD Functions ---
+        function showAddModal() {
+            Swal.fire({
+                title: `<div class="flex items-center gap-3 justify-center"><div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg></div><span class="text-2xl font-bold text-gray-800">เพิ่มข้อมูล อสม.</span></div>`,
+                html: getFormHTML(),
+                width: '900px',
+                showCancelButton: true,
+                confirmButtonText: 'บันทึกข้อมูล',
+                cancelButtonText: 'ยกเลิก',
+                customClass: {
+                    confirmButton: 'gradient-button text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover-lift',
+                    cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover-lift'
+                },
+                buttonsStyling: false,
+                didOpen: () => populateForm(),
+                preConfirm: async () => {
+                    const data = collectFormData();
+                    if (!data.idCard || !data.fullName || !data.phone) {
+                        Swal.showValidationMessage('กรุณากรอกข้อมูลที่จำเป็น: บัตรประชาชน, ชื่อ-นามสกุล, และเบอร์โทรศัพท์');
+                        return false;
+                    }
+                    Swal.showLoading();
+                    return await handleFormSubmit({ action: 'create', data });
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    Swal.fire({
+                        title: 'สำเร็จ!',
+                        text: 'เพิ่มข้อมูล อสม. เรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonText: 'ตกลง',
+                        customClass: {
+                            confirmButton: 'gradient-button text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                        },
+                        buttonsStyling: false
+                    });
+                    fetchData();
+                }
+            });
+        }
+
+        function showEditModal(rowIndex) {
+            const record = appState.vhvData.find(vhv => vhv.rowIndex === rowIndex);
+            if (!record) return;
+            Swal.fire({
+                title: `<div class="flex items-center gap-3 justify-center"><div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></div><span class="text-2xl font-bold text-gray-800">แก้ไขข้อมูล อสม.</span></div>`,
+                html: getFormHTML(),
+                width: '900px',
+                showCancelButton: true,
+                confirmButtonText: 'บันทึกการแก้ไข',
+                cancelButtonText: 'ยกเลิก',
+                customClass: {
+                    confirmButton: 'gradient-button text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover-lift',
+                    cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover-lift'
+                },
+                buttonsStyling: false,
+                didOpen: () => {
+                    populateForm(record.data);
+                    toggleStatusDate(record.data.status || 'เป็น อสม.');
+                },
+                preConfirm: async () => {
+                    const data = collectFormData();
+                    if (!data.idCard || !data.fullName || !data.phone) {
+                        Swal.showValidationMessage('กรุณากรอกข้อมูลที่จำเป็น: บัตรประชาชน, ชื่อ-นามสกุล, และเบอร์โทรศัพท์');
+                        return false;
+                    }
+                    Swal.showLoading();
+                    return await handleFormSubmit({ action: 'update', rowIndex, data });
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    Swal.fire({
+                        title: 'สำเร็จ!',
+                        text: 'แก้ไขข้อมูลเรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonText: 'ตกลง',
+                        customClass: {
+                            confirmButton: 'gradient-button text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                        },
+                        buttonsStyling: false
+                    });
+                    fetchData();
+                }
+            });
+        }
+
+        function confirmDelete(rowIndex) {
+            const record = appState.vhvData.find(vhv => vhv.rowIndex === rowIndex);
+            Swal.fire({
+                title: `<div class="text-center"><div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></div><span class="text-2xl font-bold text-gray-800">ยืนยันการลบ?</span></div>`,
+                html: `<p class="font-semibold text-red-800">"${record.data.fullName}"</p>`,
+                showCancelButton: true,
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก',
+                customClass: {
+                    confirmButton: 'bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift',
+                    cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'กำลังลบข้อมูล...',
+                        text: 'กรุณารอสักครู่',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                            handleFormSubmit({ action: 'delete', rowIndex }).then(res => {
+                                if (res && res.status === 'success') {
+                                    Swal.fire({
+                                        title: 'ลบสำเร็จ!',
+                                        text: 'ข้อมูลถูกลบเรียบร้อยแล้ว',
+                                        icon: 'success',
+                                        confirmButtonText: 'ตกลง',
+                                        customClass: {
+                                            confirmButton: 'gradient-button text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                                        },
+                                        buttonsStyling: false
+                                    });
+                                    fetchData();
+                                } else {
+                                    Swal.fire({
+                                        title: 'เกิดข้อผิดพลาด!',
+                                        text: 'ไม่สามารถลบข้อมูลได้',
+                                        icon: 'error',
+                                        confirmButtonText: 'ตกลง',
+                                        customClass: {
+                                            confirmButton: 'bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover-lift'
+                                        },
+                                        buttonsStyling: false
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Event Listeners
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        document.getElementById('search-button').addEventListener('click', filterAndRenderTable);
+        document.getElementById('clear-search-button').addEventListener('click', () => {
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-status').value = '';
+            filterAndRenderTable();
+        });
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                filterAndRenderTable();
+            }
+        });
+
+        // Go to Top Button logic
+        const goTopBtn = document.getElementById('goTopBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 200) {
+                goTopBtn.style.display = 'block';
+            } else {
+                goTopBtn.style.display = 'none';
+            }
+        });
+        goTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedUser = sessionStorage.getItem('vhvUser');
+            if (storedUser) {
+                appState.user = JSON.parse(storedUser);
+                if (appState.user.facilityId === '00126') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showMainView();
+                }
+            } else {
+                showLoginView();
+            }
+        });
+    </script>
 </body>
 </html>
