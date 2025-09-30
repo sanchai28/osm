@@ -146,14 +146,7 @@
                     e.preventDefault();
                     const targetElement = document.querySelector(`#month-${m.month}`);
                     if (targetElement) {
-                        const stickyNavHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height'), 10) || 180;
-                        const elementPosition = targetElement.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.scrollY - stickyNavHeight;
-                        
-                        window.scrollTo({
-                            top: offsetPosition,
-                            behavior: 'smooth'
-                        });
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                     }
                 });
                 monthNav.appendChild(a);
@@ -198,6 +191,10 @@
             dashboardContent.innerHTML = '';
             const fiscalYear = parseInt(fiscalYearSelect.value);
 
+            const cardsWrapper = document.createElement('div');
+            cardsWrapper.id = 'cards-wrapper';
+            cardsWrapper.className = 'cards-wrapper flex overflow-x-auto gap-6 snap-x snap-mandatory pb-4';
+
             fiscalMonths.forEach((monthInfo, index) => {
                 const year = monthInfo.month >= 10 ? fiscalYear - 1 : fiscalYear;
                 const monthData = data.summary[monthInfo.month] || {};
@@ -227,10 +224,10 @@
 
                 const monthCard = document.createElement('div');
                 monthCard.id = `month-${monthInfo.month}`;
-                monthCard.className = 'month-card glass-card rounded-2xl shadow-lg overflow-hidden fade-in-up hover-lift';
+                monthCard.className = 'month-card glass-card snap-start min-w-[85%] sm:min-w-[400px] md:min-w-[500px] rounded-2xl shadow-lg overflow-hidden fade-in-up hover-lift';
                 monthCard.style.animationDelay = `${index * 50}ms`;
                 monthCard.innerHTML = `
-                    <div class="p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white flex justify-between items-center">
+                    <div class="p-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white flex justify-between items-center">
                         <h3 class="text-xl font-bold">${monthInfo.fullName} ${year}</h3>
                         <div class="text-right">
                            <div class="font-bold text-lg">${(totalPaidInMonth + totalSuspendedInMonth).toLocaleString()} <span class="text-sm font-normal">คน</span></div>
@@ -256,14 +253,14 @@
                         <span class="text-red-700">ระงับ ${totalSuspendedInMonth.toLocaleString()}</span>
                     </div>
                 `;
-                dashboardContent.appendChild(monthCard);
+                cardsWrapper.appendChild(monthCard);
             });
-            
-            // Recalculate height and setup spy after rendering
-            calculateStickyNavHeight();
+            dashboardContent.appendChild(cardsWrapper);
+
+            // Setup spy after rendering
             setupScrollSpy();
-            
-            // Auto-scroll logic
+
+            // Auto-scroll to current month if in current fiscal year
             const currentMonthJS = new Date().getMonth() + 1;
             const currentYearBE = new Date().getFullYear() + 543;
             const selectedFiscalYear = parseInt(fiscalYearSelect.value, 10);
@@ -273,43 +270,30 @@
                 setTimeout(() => {
                     const targetElement = document.getElementById(`month-${currentMonthJS}`);
                     if (targetElement) {
-                        const stickyNavHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height'), 10) || 180;
-                        const elementPosition = targetElement.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.scrollY - stickyNavHeight;
-                        
-                        window.scrollTo({
-                            top: offsetPosition,
-                            behavior: 'auto'
-                        });
+                        targetElement.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
                     }
                 }, 300);
             }
         }
 
         function setupScrollSpy() {
-            const options = {
-                root: null,
-                rootMargin: `-${(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sticky-nav-height'), 10) || 180)}px 0px 0px 0px`,
-                threshold: 0.1
-            };
-
+            const container = document.getElementById('cards-wrapper');
+            if (!container) return;
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     const id = entry.target.getAttribute('id');
                     const navLink = document.querySelector(`.month-nav-item[href="#${id}"]`);
-                    if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
-                         document.querySelectorAll('.month-nav-item').forEach(item => item.classList.remove('active'));
-                         if(navLink) {
+                    if (entry.isIntersecting) {
+                        document.querySelectorAll('.month-nav-item').forEach(item => item.classList.remove('active'));
+                        if (navLink) {
                             navLink.classList.add('active');
                             navLink.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                         }
+                        }
                     }
                 });
-            }, options);
+            }, { root: container, threshold: 0.6 });
 
-            document.querySelectorAll('.month-card').forEach(section => {
-                observer.observe(section);
-            });
+            document.querySelectorAll('.month-card').forEach(section => observer.observe(section));
         }
 
         window.addEventListener('resize', calculateStickyNavHeight);
